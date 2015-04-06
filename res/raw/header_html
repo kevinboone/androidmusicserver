@@ -1,0 +1,70 @@
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="/~~styles_css"/>
+    <script type="text/javascript" src="/~~functions_js"></script>
+    <title>Android music player</title>
+ </head>
+
+ <body onload="onload()">
+
+ <table border="0">
+   <tr>
+      <td valign="top" id="logocell">
+        <img src="/~~logo_png"/>
+      </td>
+      <td valign="top">
+        <table border="0">
+          <tr>
+            <td talign="top">  
+                <span class="bigtime" id="transport_position"></span>
+                <span class="smalltime" id="transport_duration"></span>
+            </td>
+          </tr>
+          <tr>
+            <td id="transportbuttoncell">
+              <img src="/~~prevbutton_png" onclick="javascript:prev()"/>
+              <img src="/~~playbutton_png" onclick="javascript:play()"/>
+              <img src="/~~pausebutton_png" onclick="javascript:pause()"/>
+              <img src="/~~stopbutton_png" onclick="javascript:stop()"/>
+              <img src="/~~nextbutton_png" onclick="javascript:next()"/>
+            </td>
+          </tr>
+        </table>
+      </td>
+      <td valign="top">
+        <table id="trackinfotable" border="0">
+          <tr>
+            <td valign="top">
+              <span id="transport_status"></span>
+            </td>
+          </tr>
+          <tr>
+            <td valign="top">
+              <spand id="transport_title"></span>
+            </td>
+          </tr>
+          <tr>
+            <td valign="top">
+              <spand id="transport_album"></span>
+            </td>
+          </tr>
+          <tr>
+            <td valign="top">
+              <spand id="transport_artist"></span>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+ <div style="overflow: auto; min-height: 2em;">
+   <table cellpadding="0" cellspacing="0">
+     <tr>
+       <td id="messagecell"></td>
+     </tr>
+   </table>
+ </div>
+
