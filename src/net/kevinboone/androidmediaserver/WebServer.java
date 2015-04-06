@@ -281,7 +281,7 @@ public WebServer (Context context)
     sb.append ("<p/>");
     sb.append ("<hr/>");
     sb.append ("<a href=\"/\">Home</a> | ");
-    sb.append ("<a href=\"http://kevinboone.net/README_androidmusicserver\">Documentation</a> | ");
+    sb.append ("<a href=\"http://kevinboone.net/README_androidmusicserver.html\">Documentation</a> | ");
     sb.append ("<a href=\"javascript:volume_up()\">Vol up</a> | ");
     sb.append ("<a href=\"javascript:volume_down()\">Vol down</a> | ");
     sb.append ("<a href=\"/gui_files\">Files</a> | ");
