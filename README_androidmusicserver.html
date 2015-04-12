@@ -5,7 +5,7 @@
 
 <h1>Kevin's Music Server for Android </h1>
 
-Version 0.0.1.
+Version 0.0.2.
 
 <h2>What is this?</h2>
 
@@ -122,6 +122,9 @@ that use the media scanner.
 
 <h2>Limitations</h2>
 
+The are particular issues regarding the display of cover art: please
+see the section "Cover art" below.
+<p/>
 At present, only album or file/directory browsing is provided. In future I hope
 to support listing by artist, composer, genre, etc.
 <p/>
@@ -196,6 +199,61 @@ the service will not respond to HTTP requests. However, if the service
 is unloaded and reloading in this way, it will reinitialize, and 
 the current playlist will be lost.
 
+<h2>Cover art</h2>
+
+If you choose to browse albums including covers, then the
+app will attempt to find some cover art to display. The places it
+looks are as follows.
+<p/>
+First, the app will ask the Android media catalogue if any track in
+the specified album has an embedded image. If it does, then the first
+track that can provide an image does so. In practice, the Android media
+catalogue seems to be limited to returning "baked in" images, that is,
+images that are part of an ID3 tag or similar.
+<p/>
+Second, the app will look in the directory that contains the track file, for
+an image file that looks like it might contain cover art. At present, it
+considers files names <code>folder</code> or <code>cover</code>, perhaps
+with a leading "." (hidden files), and with extensions <code>jpg</code>
+or <code>png</code>. These names are in lower-case only. Naturally,
+this process will only produce good results if folders contain tracks
+from the same album only.
+<p/>
+The cover art extraction process is
+subject to a number of limitations.
+<ul>
+<li>
+Baked-in cover-art images can be quite large -- perhaps even photo-sized.
+Returning all the images on a page containing, say, a list of two hundred
+albums is a challenge for an Android device. Is the browser is also on a
+mobile device, then the challenge is compounded. The music server therefore
+attempts to avoid sending images if it can avoid doing so. It sets
+an <code>Expires</code> header one hour in the future for all images, 
+and sets a
+<code>Last-Modified </code>header on all images based on the time the 
+app starts up. In
+principle, therefore, the browser should not request images very 
+frequently. But...
+</li>
+<li>
+Mobile browsers in particular are often stupid when it comes to
+handling date headers. Many ignore them completely, and just blindly
+request all images in every page. Apart from choosing to browse without
+covers, there's little that can be done to avoid this problem, if you
+have a stupid browser.
+</li>
+<li>
+We don't know the actual last-modified time of a baked-in cover image. The
+music server uses its start-up time as the modification baseline, lacking
+any better information. What this means is that if you restart the app
+whilst the browser still has images in its cache, the browser will get
+confused: because the image has a last-modified date in the future, but
+in the browser's cache it has not yet expired.
+Clearling the browser cache usually fixes this
+problem. 
+</li>
+</ul>
+
 
 <h2>Disclaimer, etc</h2>
 I wrote Android Music Server server for my own use; I'm 
@@ -208,6 +266,17 @@ might expect, no warranty of any kind.
 <h2>Revision history</h2>
 
 <table cellpadding="5px">
+  <tr>
+    <td valign="top">
+      0.0.2
+    </td>
+    <td valign="top">
+      April 12 2015 
+    </td>
+    <td valign="top">
+      Added preliminary cover art support 
+    </td>
+  </tr>
   <tr>
     <td valign="top">
       0.0.1
@@ -224,6 +293,6 @@ might expect, no warranty of any kind.
 
 <h2>Downloads</h2>
 
-<a href="androidmusicserver-0.0.1.zip">Source code</a><br/>
-<a href="androidmusicserver-0.0.1.apk">Android API package</a><br/>
+<a href="androidmusicserver-0.0.2.zip">Source code</a><br/>
+<a href="androidmusicserver-0.0.2.apk">Android API package</a><br/>
 

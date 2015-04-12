@@ -6,9 +6,11 @@
 
 package net.kevinboone.androidmediaserver;
 import java.util.*;
+import java.text.*;
 import java.io.*;
 import java.net.*;
 import android.content.*;
+import android.graphics.*;
 import android.media.MediaPlayer;
 import android.util.Log;
 import android.media.*;
@@ -25,11 +27,14 @@ private Context context = null;
 protected List<TrackInfo> playlist = new Vector<TrackInfo>();
 protected int currentPlaylistIndex = -1;
 protected AudioDatabase audioDatabase = null;
+private String lastModifiedString = null; 
+private Date lastModifiedDate = null; 
 
 public WebServer (Context context)
   {
   super(30000);
   this.context = context;
+  setLastModifiedToNow();
   mediaPlayer.setOnCompletionListener (this);
   RemoteControlReceiver.setWebServer (this);
   audioDatabase = new AudioDatabase();
@@ -43,6 +48,43 @@ public WebServer (Context context)
                               Map<String, String> files)
     {
     Log.w ("AMP", "Got URI: " + uri);
+
+    /* 
+       Check If-Modified-Since. We only set a Last-Modified on images at
+       present, because every other response will be quite small. So, in
+       principle, we need not really check the dates at all, as only 
+       images will have an If-Modified-Since header, and they won't change
+       in the life of the program. Still, better to do things properly, 
+       I guess. The base date for the modification test is when the 
+       program starts, lacking any better date baseline.
+    */
+
+    // Watch out -- NanoHTTPD lowercases header names :/
+
+    String ifModifiedHeader = header.get("if-modified-since");
+    if (ifModifiedHeader != null && ifModifiedHeader.length() != 0)
+      {
+      SimpleDateFormat gmtFrmt = new SimpleDateFormat
+        ("E, d MMM yyyy HH:mm:ss 'GMT'");
+      gmtFrmt.setTimeZone(TimeZone.getTimeZone("GMT"));
+      try
+        {
+        Date ifModifiedDate = gmtFrmt.parse (ifModifiedHeader);
+        if (ifModifiedDate.getTime() <= lastModifiedDate.getTime())
+          {
+          return new NanoHTTPD.Response 
+            (Response.Status.NOT_MODIFIED, "text/plain", 
+               "Not modified"); 
+          }
+        }
+      catch (Exception e)
+        {
+        // Broken client -- what the heck can we do?
+        }
+      }
+
+
+
     if (uri.indexOf ("~~") == 0)
       {
       return serveResource (uri.substring(2));
@@ -55,6 +97,14 @@ public WebServer (Context context)
       {
       return (handleCommand (parameters.get("cmd")));
       }
+    else if (uri.indexOf ("cover") == 0)
+      {
+      return (handleCover (parameters.get("album")));
+      }
+    else if (uri.indexOf ("/cover") == 0)
+      {
+      return (handleCover (parameters.get("album")));
+      }
     else if (uri.indexOf ("/cmd") == 0)
       {
       return (handleCommand (parameters.get("cmd")));
@@ -62,7 +112,7 @@ public WebServer (Context context)
     else if ("/".equals (uri) || "".equals (uri))
       { 
       return new NanoHTTPD.Response (Response.Status.OK, "text/html", 
-            makeRedirect ("/gui_albums"));
+            makeRedirect ("/gui_home"));
       }
     else
       { 
@@ -74,6 +124,10 @@ public WebServer (Context context)
         return handleGuiPlaylist (parameters);
       else if (uri.indexOf ("/gui_playlist") == 0)
         return handleGuiPlaylist (parameters);
+      else if (uri.indexOf ("gui_home") == 0)
+        return handleGuiHome (parameters);
+      else if (uri.indexOf ("/gui_home") == 0)
+        return handleGuiHome (parameters);
       if (uri.indexOf ("gui_albums") == 0)
         return handleGuiAlbums (parameters);
       if (uri.indexOf ("/gui_albums") == 0)
@@ -87,18 +141,45 @@ public WebServer (Context context)
       }
     }
 
+  private void setLastModifiedToNow()
+    {
+    SimpleDateFormat gmtFrmt = new SimpleDateFormat
+      ("E, d MMM yyyy HH:mm:ss 'GMT'");
+    gmtFrmt.setTimeZone(TimeZone.getTimeZone("GMT"));
+    lastModifiedDate = new Date();
+    lastModifiedString = gmtFrmt.format(lastModifiedDate);
+    }
+
+  String makeGenParams (Map<String, String> parameters)
+    {
+    String s = "";
+    String covers = parameters.get("covers");
+    if (covers != null && covers.length() > 0)
+      s += "covers=" + covers + "&";
+    return s;
+    }
   
   /**
     Formats a list of albums, maintained by MediaDatabase
   */
-  String makeAlbumList (Map<String,String> parameters)
+  String makeAlbumList (Map<String,String> parameters, boolean covers)
     {
     StringBuffer sb = new StringBuffer();
     sb.append ("<span class=\"pagetitle\">" + "Albums" + "</span><p/>");
+    sb.append ("<table>");
 
     Set<String> albums = audioDatabase.getAlbums();
     for (String album : albums)
       {
+      sb.append ("<tr>");
+      sb.append ("<td valign=\"top\">");
+      if (covers)
+        sb.append ("<img width=\"64\" src=\"/cover?album=" 
+         + URLEncoder.encode (album) + "\"/>"); 
+      sb.append ("</td>");
+      sb.append ("<td valign=\"top\">");
+      sb.append (album);
+      sb.append ("<br/>");
       sb.append (" <a href=\"javascript:play_album_now('" 
               + EscapeUtils.escapeJSON (album) + 
                 "')\"><span class=\"textbuttonspan\">Play now</span></a> ");
@@ -106,22 +187,32 @@ public WebServer (Context context)
               + EscapeUtils.escapeJSON (album) + 
                 "')\"><span class=\"textbuttonspan\">Add</span></a> ");
       sb.append (" <a href=\"/gui_tracks_by_album?album=" 
-              + URLEncoder.encode (album) + 
+              + URLEncoder.encode (album) + "&" + makeGenParams (parameters) + 
                 "\"><span class=\"textbuttonspan\">Open</span></a> ");
-      sb.append (album);
-      sb.append ("<br/>");
+      sb.append ("</td>");
+      sb.append ("</tr>");
       }
+    sb.append ("</table>\n");
     return new String (sb);
     }
 
   
-  String makeTracksByAlbum (String album)
+  String makeTracksByAlbum (String album, boolean covers)
     {
     StringBuffer sb = new StringBuffer();
 
     sb.append ("<span class=\"pagetitle\">" + album + "</span><p/>");
 
     List<String> uris = audioDatabase.getAlbumURIs (context, album);
+    
+    if (covers)
+      {
+      sb.append ("<img width=\"128\" src=\"/cover?album=" 
+         + URLEncoder.encode (album) + "\"/>"); 
+      sb.append ("<p/>");
+      sb.append ("<br flush=\"all\"/>\n");
+      }      
+
     for (String uri : uris)
       {
       sb.append (" <a href=\"javascript:play_file_now('" 
@@ -274,7 +365,7 @@ public WebServer (Context context)
     }
 
 
-  String makeControls ()
+  String makeControls (Map<String,String> parameters)
     {
     StringBuffer sb = new StringBuffer();
 
@@ -285,8 +376,10 @@ public WebServer (Context context)
     sb.append ("<a href=\"javascript:volume_up()\">Vol up</a> | ");
     sb.append ("<a href=\"javascript:volume_down()\">Vol down</a> | ");
     sb.append ("<a href=\"/gui_files\">Files</a> | ");
-    sb.append ("<a href=\"/gui_albums\">Albums</a> | ");
-    sb.append ("<a href=\"/gui_playlist\">Playlist</a> | ");
+    sb.append ("<a href=\"/gui_albums?" + makeGenParams (parameters) 
+       + "\">Albums</a> | ");
+    sb.append ("<a href=\"/gui_playlist?" + makeGenParams (parameters) 
+       + "\">Playlist</a> | ");
     sb.append ("<a href=\"javascript:clear_playlist()\">Clear playlist</a>");
     sb.append ("<p/>");
 
@@ -294,6 +387,87 @@ public WebServer (Context context)
     }
 
 
+  NanoHTTPD.Response serveFileResource (String filePath) 
+    {
+    try
+      {
+      InputStream is = new FileInputStream (new File (filePath));
+      return new NanoHTTPD.Response (Response.Status.OK, 
+        FileUtils.getMimeType (filePath), is);
+      }
+    catch (Exception e)
+      {
+      return new NanoHTTPD.Response (Response.Status.NOT_FOUND, 
+        "text/plain", e.toString());
+      }
+    }
+
+  /**
+ * Handles a URL of the form /cover?album=xxx.
+ */
+  NanoHTTPD.Response handleCover (String album) 
+    {
+    BitmapFactory.Options bfo = new BitmapFactory.Options();
+    bfo.inJustDecodeBounds = true;
+    String filePath = null;
+
+    try
+      {
+      byte[] ep = null;
+      List<String> trackUris = audioDatabase.getAlbumURIs (context, album);
+      for (String uri : trackUris)
+        {
+        if (filePath == null)
+          filePath = audioDatabase.getFilePathFromContentUri 
+            (context, android.net.Uri.parse(uri));
+        ep = audioDatabase.getEmbeddedPicture (context, uri);
+        if (ep != null)
+          {
+          break;
+          }
+        }
+      if (ep != null)
+        {
+        Bitmap bm = BitmapFactory.decodeByteArray (ep, 0, ep.length, bfo); 
+
+        String mimeType = bfo.outMimeType;
+  
+        InputStream is = new ByteArrayInputStream (ep); 
+        NanoHTTPD.Response resp = new NanoHTTPD.Response 
+          (Response.Status.OK, mimeType, is);
+        resp.addHeader ("Last-Modified", lastModifiedString);
+        resp.addHeader ("Cache-Control", "public");
+        SimpleDateFormat gmtFrmt = new SimpleDateFormat
+          ("E, d MMM yyyy HH:mm:ss 'GMT'");
+        gmtFrmt.setTimeZone(TimeZone.getTimeZone("GMT"));
+        Date oneHour = new Date (new Date().getTime() + 3600000);
+        resp.addHeader ("Expires", gmtFrmt.format (oneHour));
+        //is.close();
+        return resp;
+        }
+      else if (filePath != null)
+        {
+        String coverFile = CoverUtils.getCoverFileForTrackFile (filePath);
+        Log.w ("XXX", "COVER FILE=" + coverFile); 
+        if (coverFile != null)
+          return serveFileResource (coverFile);
+        else
+          return serveResource ("default_cover_png");
+        }
+      else
+        return serveResource ("default_cover_png");
+      }
+    catch (Exception e)
+      {
+      return serveResource ("default_cover_png");
+      }
+    }
+
+
+
+  /**
+ * Handles a URL of the form /cmd?cmd=xxx.
+ */
   NanoHTTPD.Response handleCommand (String cmd) 
     {
     try
@@ -371,6 +545,11 @@ public WebServer (Context context)
     }
 
 
+  /**
+  Returns an embedded binary object with the appropriate MIME type. THis is
+  all a but ugly, but it's hard to provide bunary files with an Android
+  app in a better way.
+  */
   NanoHTTPD.Response serveResource (String resource)
     {
     if ("styles_css".equals (resource))
@@ -389,6 +568,12 @@ public WebServer (Context context)
       {
       InputStream is = context.getResources().openRawResource 
         (R.raw.logo_png);
+      return new NanoHTTPD.Response (Response.Status.OK, "image/png", is);
+      }
+    else if ("default_cover_png".equals (resource))
+      {
+      InputStream is = context.getResources().openRawResource 
+        (R.raw.default_cover_png);
       return new NanoHTTPD.Response (Response.Status.OK, "image/png", is);
       }
     else if ("playbutton_png".equals (resource))
@@ -544,9 +729,13 @@ public WebServer (Context context)
     if (album == null)
       album = ""; // Prevent a crash
 
+    boolean covers = false;
+    if ("true".equals (parameters.get("covers")))
+      covers = true;
+
     String answer = makeHtmlHeader();
-    answer += makeTracksByAlbum (album);
-    answer += makeControls();
+    answer += makeTracksByAlbum (album, covers);
+    answer += makeControls(parameters);
     answer += makeHtmlFooter();
     return new NanoHTTPD.Response (answer);
     }
@@ -564,7 +753,7 @@ public WebServer (Context context)
 
     String answer = makeHtmlHeader();
     answer += makeDirList (path, parameters); 
-    answer += makeControls();
+    answer += makeControls(parameters);
     answer += makeHtmlFooter();
     return new NanoHTTPD.Response (answer);
     }
@@ -575,13 +764,44 @@ public WebServer (Context context)
   */
   protected Response handleGuiAlbums (Map<String,String> parameters)
     {
+    boolean covers = false;
+    if ("true".equals (parameters.get("covers")))
+      covers = true;
     String answer = makeHtmlHeader();
-    answer += makeAlbumList (parameters); 
-    answer += makeControls();
+    answer += makeAlbumList (parameters, covers); 
+    answer += makeControls(parameters);
     answer += makeHtmlFooter();
     return new NanoHTTPD.Response (answer);
     }
 
+
+
+  
+  protected String makeHomePage (Map<String,String> parameters)
+    {
+    StringBuffer sb = new StringBuffer();
+
+    sb.append ("<a href=\"/gui_albums?covers=true\">Browse albums with covers</a><br/>");
+    sb.append ("<a href=\"/gui_albums?covers=false\">Browse albums without covers</a><br/>");
+    sb.append ("<a href=\"/gui_files\">Browse files on storage</a><br/>");
+    sb.append ("<a href=\"/gui_playlist\">View the current playlist</a><br/>");
+    sb.append ("<a href=\"http://kevinboone.net/README_androidmusicserver.html\">Read the on-line documentation</a><br/>");
+
+    return new String (sb);
+    }
+
+  /*
+    Make the home page 
+  */
+  protected Response handleGuiHome (Map<String,String> parameters)
+    {
+    String answer = makeHtmlHeader();
+    answer += "<span class=\"pagetitle\">Main index</span><p/>"; 
+    answer += makeHomePage(parameters);
+    answer += makeControls(parameters);
+    answer += makeHtmlFooter();
+    return new NanoHTTPD.Response (answer);
+    }
 
 
   /*
@@ -603,7 +823,7 @@ public WebServer (Context context)
         answer += "<br/>"; 
         }
       }
-    answer += makeControls();
+    answer += makeControls(parameters);
     answer += makeHtmlFooter();
     return new NanoHTTPD.Response (answer);
     }

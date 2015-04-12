@@ -4,7 +4,7 @@
 
 WEBSOURCE=/home/kevin/docs/kzone5/source
 WEBTARGET=/home/kevin/docs/kzone5/target
-VERSION=0.0.1
+VERSION=0.0.2
 
 (cd ..; zip -r $WEBTARGET/androidmusicserver-${VERSION}.zip androidmusicserver/)
 cp *.html $WEBSOURCE

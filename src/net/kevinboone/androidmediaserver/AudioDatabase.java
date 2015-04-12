@@ -145,6 +145,54 @@ public class AudioDatabase
       return ti;
       }
     }
+
+  /** 
+     Try to get the embedded picture for an item, if there is one. 
+     If not, or in the event of error, return null. For some reason,
+     calls on the metadata extractor are not thread safe, so this method
+     has to be synchronized :/
+  */
+  synchronized byte[] getEmbeddedPicture (Context context, String uri)
+    {
+    try
+      {
+      if (uri.startsWith ("content:"))
+        {
+        android.net.Uri contentUri = android.net.Uri.parse (uri);
+        mmr.setDataSource (context, contentUri);
+        }
+      else
+        {
+        String filename = WebServer.DOCROOT + "/" + uri;
+        mmr.setDataSource (filename);
+        }
+
+      byte[] ep = mmr.getEmbeddedPicture ();
+      return ep;
+      }
+    catch (Throwable e)
+      {
+      Log.w ("AMS", "Error fetching embdedded picture: " + e.toString());
+      return null;
+      }
+    }
+
+
+public String getFilePathFromContentUri (Context context, Uri uri)
+    {
+    String filePath;
+    String[] filePathColumn = {android.provider.MediaStore.MediaColumns.DATA};
+
+    Cursor cursor = context.getContentResolver().query (uri, filePathColumn, 
+      null, null, null);
+    cursor.moveToFirst();
+
+    int columnIndex = cursor.getColumnIndex (filePathColumn[0]);
+    filePath = cursor.getString(columnIndex);
+    cursor.close();
+    return filePath;
+    }
+
 }
 
 
