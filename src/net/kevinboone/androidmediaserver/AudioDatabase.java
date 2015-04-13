@@ -21,9 +21,14 @@ import android.provider.MediaStore;
     media scanner. */
 public class AudioDatabase
 {
+  private final String GENRE_ID = MediaStore.Audio.Genres._ID;
+  private final String GENRE_NAME = MediaStore.Audio.Genres.NAME;
+  private final String AUDIO_ID = MediaStore.Audio.Media._ID;
+
   protected TreeSet<String> albums = new TreeSet<String>();
   protected TreeSet<String> artists = new TreeSet<String>();
   protected TreeSet<String> composers = new TreeSet<String>();
+  protected TreeSet<String> genres = new TreeSet<String>();
   MediaMetadataRetriever mmr = new MediaMetadataRetriever();
 
   /**
@@ -62,10 +67,77 @@ public class AudioDatabase
          artists.add (artist);
         } while (cur.moveToNext());
       cur.close();
+
+
+      cur = context.getContentResolver().query (
+         MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,
+         new String[] { MediaStore.Audio.Genres._ID, 
+           MediaStore.Audio.Genres.NAME}, null, null, null);
+      for (cur.moveToFirst(); !cur.isAfterLast(); cur.moveToNext()) 
+        {
+        String genreID = cur.getString(0);
+        String genreName = cur.getString(1);
+        if (genreHasTracks(context, genreID))
+          genres.add (genreName);
+        }
+      cur.close();
       }
     else
       Log.w ("AMS", "Media database scan produced no results");
     Log.w ("AMS", "Done media database scan");
+    }
+
+
+  /** 
+    Try to determine whether the specified genre ID is associated with 
+    any tracks. This is to prevent including empty genres in the list. 
+    Notethat this method takes a genre ID, not a genre name, and so is
+    probably not much use except as a helper to the scan() method 
+  */
+  public boolean genreHasTracks (Context context, String genreID)
+    {
+    Uri uri = MediaStore.Audio.Genres.Members.getContentUri
+      ("external", Long.valueOf(genreID)); 
+
+    String[] projection = new String[]{MediaStore.Audio.Media.TITLE, 
+      MediaStore.Audio.Media._ID};
+
+    Cursor cur = context.getContentResolver().query(uri, projection, 
+      null, null, null);
+
+    boolean ret;
+
+    if (cur.moveToFirst())
+      ret = true;
+    else
+      ret = false;    
+
+    cur.close();
+
+    return ret;
+    }
+  
+  public Set<String> getAlbumsByGenre (Context context, String genre)
+    {
+    Set<String> results = new TreeSet<String>();
+    for (String album : albums)
+      {
+      List<String> trackUris = getAlbumURIs (context, album);
+      for (String trackUri : trackUris)
+        {
+        TrackInfo ti = getTrackInfo (context, trackUri); 
+        if (genre.equals (ti.genre))
+          {
+          results.add (album);
+          break;
+          }
+        // Because this is so slow, only check the first track of each
+        //  album for genre
+        break;
+        }
+      }
+
+    return results;
     }
 
   public Set<String> getAlbums()
@@ -81,6 +153,11 @@ public class AudioDatabase
   public Set<String> getComposers()
    {
    return composers;
+   }
+
+  public Set<String> getGenres()
+   {
+   return genres;
    }
 
 
@@ -135,6 +212,7 @@ public class AudioDatabase
       ti.composer  = mmr.extractMetadata (mmr.METADATA_KEY_COMPOSER);
       ti.album = mmr.extractMetadata (mmr.METADATA_KEY_ALBUM);
       ti.trackNumber = mmr.extractMetadata (mmr.METADATA_KEY_CD_TRACK_NUMBER);
+      ti.genre = mmr.extractMetadata (mmr.METADATA_KEY_GENRE);
       return ti;
       }
     catch (Throwable e)

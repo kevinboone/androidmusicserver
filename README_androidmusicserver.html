@@ -21,7 +21,9 @@ which supports similar operations on Linux and Windows.
 <p/>
 This app provides only very rudimentary features at present: 
 audio tracks can be selected from a list of albums, or
-directly from the filesystem.  
+directly from the filesystem. You can restrict the album listing to particular
+genres rather than displaying all albums on the same page. Album cover
+art images can be displayed (but see notes below about this.)
 
 <h2>Installation</h2>
 
@@ -254,6 +256,24 @@ problem.
 </li>
 </ul>
 
+<h2>Genre support</h2>
+
+Android Music Server provides a list of genres, to restrict the listing of
+albums to specific genres. Needless to say, for this to work the audio
+files must have valid genre tags.
+<p/>
+Querying the Android media catalogue for genre information is painfully
+slow. I believe that there is some problem with the internal implementation,
+which seems to require the whole genre catalogue to be expanded into tracks
+and then a query run against each track. Whatever the reason, with large
+numbers of tracks (more than a few hundred) some short-cuts have to be
+taken. The application therefore assumes that each track in an album has
+the same genre and, when searching which albums match a genre, only the
+first track is checked. Of course, it's not all that unusual for 
+different tracks to have different genres in the same album, but testing
+them all is simply unfeasibly slow.
+<p/>
+Genres that have no associated tracks are silently ignored.
 
 <h2>Disclaimer, etc</h2>
 I wrote Android Music Server server for my own use; I'm 
@@ -274,7 +294,7 @@ might expect, no warranty of any kind.
       April 12 2015 
     </td>
     <td valign="top">
-      Added preliminary cover art support 
+      Added preliminary cover art and genre filtering support
     </td>
   </tr>
   <tr>
@@ -294,5 +314,6 @@ might expect, no warranty of any kind.
 <h2>Downloads</h2>
 
 <a href="androidmusicserver-0.0.2.zip">Source code</a><br/>
-<a href="androidmusicserver-0.0.2.apk">Android API package</a><br/>
+<a href="androidmusicserver-0.0.2.apk">Android APK package</a><br/>
+
 

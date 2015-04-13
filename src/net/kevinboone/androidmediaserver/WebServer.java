@@ -118,20 +118,28 @@ public WebServer (Context context)
       { 
       if (uri.indexOf ("gui_files") == 0)
         return handleGuiFiles (parameters);
-      else if (uri.indexOf ("/gui_files") == 0)
+      if (uri.indexOf ("/gui_files") == 0)
         return handleGuiFiles (parameters);
-      else if (uri.indexOf ("gui_playlist") == 0)
+      if (uri.indexOf ("gui_albums_by_genre") == 0)
+        return handleGuiAlbumsByGenre (parameters);
+      if (uri.indexOf ("/gui_albums_by_genre") == 0)
+        return handleGuiAlbumsByGenre (parameters);
+      if (uri.indexOf ("gui_playlist") == 0)
         return handleGuiPlaylist (parameters);
-      else if (uri.indexOf ("/gui_playlist") == 0)
+      if (uri.indexOf ("/gui_playlist") == 0)
         return handleGuiPlaylist (parameters);
-      else if (uri.indexOf ("gui_home") == 0)
+      if (uri.indexOf ("gui_home") == 0)
         return handleGuiHome (parameters);
-      else if (uri.indexOf ("/gui_home") == 0)
+      if (uri.indexOf ("/gui_home") == 0)
         return handleGuiHome (parameters);
       if (uri.indexOf ("gui_albums") == 0)
         return handleGuiAlbums (parameters);
       if (uri.indexOf ("/gui_albums") == 0)
         return handleGuiAlbums (parameters);
+      if (uri.indexOf ("gui_genres") == 0)
+        return handleGuiGenres (parameters);
+      if (uri.indexOf ("/gui_genres") == 0)
+        return handleGuiGenres (parameters);
       if (uri.indexOf ("gui_tracks_by_album") == 0)
         return handleGuiTracksByAlbum (parameters);
       if (uri.indexOf ("/gui_tracks_by_album") == 0)
@@ -196,7 +204,39 @@ public WebServer (Context context)
     return new String (sb);
     }
 
+
+  /**
+    Formats a list of genres, maintained by MediaDatabase
+  */
+  String makeGenreList (Map<String,String> parameters, boolean covers)
+    {
+    StringBuffer sb = new StringBuffer();
+    sb.append ("<span class=\"pagetitle\">" + "Genres" + "</span><p/>");
+    sb.append ("<table>");
+
+    Set<String> genres = audioDatabase.getGenres();
+    for (String genre: genres)
+      {
+      sb.append ("<tr>");
+      sb.append ("<td valign=\"top\">");
+// Nothing in the image slot yet
+      sb.append ("</td>");
+      sb.append ("<td valign=\"top\">");
+      sb.append (" <a href=\"/gui_albums_by_genre?genre=" 
+              + URLEncoder.encode (genre) + "&" + makeGenParams (parameters) + 
+                "\"><span>" + genre + "</span></a> ");
+      sb.append ("</td>");
+      sb.append ("</tr>");
+      }
+    sb.append ("</table>\n");
+    return new String (sb);
+    }
+
   
+  
+  /**
+    Format a list of tracks matching the specified album.
+  */
   String makeTracksByAlbum (String album, boolean covers)
     {
     StringBuffer sb = new StringBuffer();
@@ -227,6 +267,52 @@ public WebServer (Context context)
       }
     return new String (sb);
     }
+
+
+  /**
+    Format a list of albums matching the specified genre.
+  */
+  String makeAlbumsByGenre (Map<String,String> parameters, 
+      String genre, boolean covers)
+    {
+    StringBuffer sb = new StringBuffer();
+
+    sb.append ("<span class=\"pagetitle\">Albums in genre '" 
+     + genre + "'</span><p/>");
+
+    Set<String> albums = audioDatabase.getAlbumsByGenre (context, genre);
+   Log.w ("XXX", "XXX GENRES = " + genre); 
+    sb.append ("<table>");
+
+    for (String album : albums)
+      {
+      sb.append ("<tr>");
+      sb.append ("<td valign=\"top\">");
+      if (covers)
+        sb.append ("<img width=\"64\" src=\"/cover?album=" 
+         + URLEncoder.encode (album) + "\"/>"); 
+      sb.append ("</td>");
+      sb.append ("<td valign=\"top\">");
+      sb.append (album);
+      sb.append ("<br/>");
+      sb.append (" <a href=\"javascript:play_album_now('" 
+              + EscapeUtils.escapeJSON (album) + 
+                "')\"><span class=\"textbuttonspan\">Play now</span></a> ");
+      sb.append (" <a href=\"javascript:add_album_to_playlist('" 
+              + EscapeUtils.escapeJSON (album) + 
+                "')\"><span class=\"textbuttonspan\">Add</span></a> ");
+      sb.append (" <a href=\"/gui_tracks_by_album?album=" 
+              + URLEncoder.encode (album) + "&" + makeGenParams (parameters) + 
+                "\"><span class=\"textbuttonspan\">Open</span></a> ");
+      sb.append ("</td>");
+      sb.append ("</tr>");
+      }
+
+    sb.append ("</table>\n");
+
+    return new String (sb);
+    }
+
 
 
   /**
@@ -378,6 +464,8 @@ public WebServer (Context context)
     sb.append ("<a href=\"/gui_files\">Files</a> | ");
     sb.append ("<a href=\"/gui_albums?" + makeGenParams (parameters) 
        + "\">Albums</a> | ");
+    sb.append ("<a href=\"/gui_genres?" + makeGenParams (parameters) 
+       + "\">Genres</a> | ");
     sb.append ("<a href=\"/gui_playlist?" + makeGenParams (parameters) 
        + "\">Playlist</a> | ");
     sb.append ("<a href=\"javascript:clear_playlist()\">Clear playlist</a>");
@@ -741,6 +829,27 @@ public WebServer (Context context)
     }
 
 
+  /**
+    Make the album-list-by-genre page for the "genre" specified in the request
+  */
+  protected Response handleGuiAlbumsByGenre (Map<String,String> parameters)
+    {
+    String genre = parameters.get("genre");
+    if (genre == null)
+      genre = ""; // Prevent a crash
+
+    boolean covers = false;
+    if ("true".equals (parameters.get("covers")))
+      covers = true;
+
+    String answer = makeHtmlHeader();
+    answer += makeAlbumsByGenre (parameters, genre, covers);
+    answer += makeControls(parameters);
+    answer += makeHtmlFooter();
+    return new NanoHTTPD.Response (answer);
+    }
+
+
 
   /**
     Make the file list page for the "path" specified in the request
@@ -774,6 +883,22 @@ public WebServer (Context context)
     return new NanoHTTPD.Response (answer);
     }
 
+  /**
+    Make the genre list page. 
+  */
+  protected Response handleGuiGenres (Map<String,String> parameters)
+    {
+    boolean covers = false;
+    if ("true".equals (parameters.get("covers")))
+      covers = true;
+    String answer = makeHtmlHeader();
+    answer += makeGenreList (parameters, covers); 
+    answer += makeControls(parameters);
+    answer += makeHtmlFooter();
+    return new NanoHTTPD.Response (answer);
+    }
+
+
 
 
   
@@ -781,11 +906,33 @@ public WebServer (Context context)
     {
     StringBuffer sb = new StringBuffer();
 
-    sb.append ("<a href=\"/gui_albums?covers=true\">Browse albums with covers</a><br/>");
-    sb.append ("<a href=\"/gui_albums?covers=false\">Browse albums without covers</a><br/>");
-    sb.append ("<a href=\"/gui_files\">Browse files on storage</a><br/>");
-    sb.append ("<a href=\"/gui_playlist\">View the current playlist</a><br/>");
-    sb.append ("<a href=\"http://kevinboone.net/README_androidmusicserver.html\">Read the on-line documentation</a><br/>");
+    sb.append 
+     ("<span class=\"pagesubtitle\">Browse albums with covers</span><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"/gui_albums?covers=true\">Browse all albums</a><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"/gui_genres?covers=true\">Browse albums by genre</a><br/>");
+    sb.append ("<p/>");
+
+    sb.append 
+     ("<span class=\"pagesubtitle\">Browse albums without covers</span><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"/gui_albums?covers=false\">Browse all albums</a><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"/gui_genres?covers=false\">Browse albums by genre</a><br/>");
+    sb.append ("<p/>");
+
+    sb.append 
+     ("<span class=\"pagesubtitle\">Browse files</span><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"/gui_files\">Browse whole filesystem</a><br/>");
+    sb.append ("<p/>");
+
+    sb.append 
+     ("<span class=\"pagesubtitle\">Playlist</span><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"/gui_playlist\">View the current playlist</a><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"javascript:clear_playlist()\">Clear the playlist</a>");
+    sb.append ("<p/>");
+
+    sb.append 
+     ("<span class=\"pagesubtitle\">Help</span><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"http://kevinboone.net/README_androidmusicserver.html\">Read the on-line documentation</a><br/>");
+    sb.append ("<p/>");
 
     return new String (sb);
     }

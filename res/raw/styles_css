@@ -64,4 +64,11 @@ a:active
   padding-bottom: 1em;
   }
 
+.pagesubtitle
+  {
+  font-weight: bold;
+  font-family: sans-serif;
+  padding-top: 1em;
+  }
+
 
