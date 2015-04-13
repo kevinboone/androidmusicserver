@@ -652,6 +652,10 @@ public WebServer (Context context)
         {
         return clearPlaylist();
         }
+      else if ("shuffle_playlist".equalsIgnoreCase (cmd))
+        {
+        return shufflePlaylist();
+        }
       else if ("random_album".equalsIgnoreCase (cmd))
         {
         return playRandomAlbum();
@@ -1034,7 +1038,8 @@ public WebServer (Context context)
      ("<span class=\"pagesubtitle\">Playlist</span><br/>");
     sb.append ("&nbsp;&nbsp;<a href=\"javascript:random_album()\">Play a randomly-selected album</a><br/>");
     sb.append ("&nbsp;&nbsp;<a href=\"/gui_playlist\">View the current playlist</a><br/>");
-    sb.append ("&nbsp;&nbsp;<a href=\"javascript:clear_playlist()\">Clear the playlist</a>");
+    sb.append ("&nbsp;&nbsp;<a href=\"javascript:clear_playlist()\">Clear the playlist</a><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"javascript:shuffle_playlist()\">Shuffle the playlist</a>");
     sb.append ("<p/>");
 
     sb.append 
@@ -1084,7 +1089,14 @@ public WebServer (Context context)
         answer += ti.title; 
         answer += "<br/>"; 
         }
+      answer += "<p/>\n";
+      answer += 
+       "<a href=\"javascript:shuffle_playlist();window.location.reload(true)\">[Shuffle]</a> | ";
+      answer += 
+       "<a href=\"javascript:clear_playlist();window.location.reload(true)\">[Clear]</a>";
       }
+    answer += "<p/>\n";
+  
     answer += makeControls(parameters);
     answer += makeHtmlFooter();
     return new NanoHTTPD.Response (answer);
@@ -1259,6 +1271,21 @@ public WebServer (Context context)
     return playInPlaylist (currentPlaylistIndex);
     }
 
+
+  /** Shuffle the playlist. */
+  NanoHTTPD.Response shufflePlaylist()
+    {
+    if (playlist.size() == 0)
+      return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+        makeJSONStatusResponse 
+         (Errors.ERR_PL_EMPTY, Errors.perror (Errors.ERR_PL_EMPTY)));
+    
+    Collections.shuffle (playlist); 
+    return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+        makeJSONStatusResponse (0));
+    }
+
+
   /** Clear the playlist. This method always returns a JSON-format
       success code. */
   NanoHTTPD.Response clearPlaylist()
@@ -1273,18 +1300,25 @@ public WebServer (Context context)
          (0));
     }
 
+
   /** Play a random album. */ 
   NanoHTTPD.Response playRandomAlbum()
     {
     Set<String> albums = audioDatabase.getAlbums();
-    int size = albums.size();
+    int size = albums.size(); 
+    if (size == 0)
+      return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+        makeJSONStatusResponse 
+         (Errors.ERR_NO_ALBUMS));
+
     String album = "";
+
     int item = new Random().nextInt(size); 
     int i = 0;
     for (String cand: albums)
       {
       i++;
-      if (i == item)
+      if (i == item || i == albums.size() - 1)
         {
         album = cand;
         break;

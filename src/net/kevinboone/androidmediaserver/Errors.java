@@ -11,6 +11,7 @@ public class Errors
   public static final int ERR_OK = 0;
   public static final int ERR_PL_EMPTY = 1;
   public static final int ERR_PL_RANGE = 2;
+  public static final int ERR_NO_ALBUMS = 3;
 
   /** Gets the string corresponding to an error code. */
   public static String perror (int errorCode)
@@ -20,6 +21,7 @@ public class Errors
       case ERR_OK: return "OK";
       case ERR_PL_EMPTY: return "Playlist empty";
       case ERR_PL_RANGE: return "Playlist index out of range";
+      case ERR_NO_ALBUMS: return "No albums found in media catalogue";
       }
     return "Unknown error";
     }

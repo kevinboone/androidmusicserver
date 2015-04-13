@@ -306,6 +306,20 @@ artists. If many albums are of that type, the artist list could be very
 long.
 
 
+<h2>Playlist operations</h2>
+
+On the Playlist page you can shuffle or clear the playlist, if 
+it is not empty. Clicking either of the relevant links causes the
+page to refresh but, because the HTTP requests made using JavaScript
+are asynchronous, it can't be guaranteed that the playlist has changed
+on the server before the page is refreshed. You might need to refresh
+the page explicitly if changes to the playlist do not show up
+immediately. 
+<p/>
+Shuffling only changes the order in which items appear in the playlist --
+if something is playing when you shuffle, the change in ordering will
+only be apparent when that track is finished.
+
 <h2>Android media catalogue issues</h2>
 
 Android maintains a catalogue of media files and their metadata (tags).

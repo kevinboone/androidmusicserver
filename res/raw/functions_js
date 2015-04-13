@@ -215,6 +215,15 @@ function random_album()
 
 
 /*
+  shuffle_playlist() invoked by a link on the HTML page
+*/
+function shuffle_playlist()
+  {
+  make_command_request ("shuffle_playlist", response_callback_gen_status);
+  }
+
+
+/*
   rescan_filesystem() invoked by a link on the HTML page
 */
 function rescan_filesystem()
