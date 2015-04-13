@@ -503,7 +503,6 @@ public WebServer (Context context)
     sb.append ("<p/>");
     sb.append ("<hr/>");
     sb.append ("<a href=\"/\">Home</a> | ");
-    sb.append ("<a href=\"http://kevinboone.net/README_androidmusicserver.html\">Documentation</a> | ");
     sb.append ("<a href=\"/gui_files\">Files</a> | ");
     sb.append ("<a href=\"/gui_albums?" + makeGenParams (parameters) 
        + "\">Albums</a> | ");
@@ -652,6 +651,10 @@ public WebServer (Context context)
       else if ("clear_playlist".equalsIgnoreCase (cmd))
         {
         return clearPlaylist();
+        }
+      else if ("random_album".equalsIgnoreCase (cmd))
+        {
+        return playRandomAlbum();
         }
       else if ("prev".equalsIgnoreCase (cmd))
         {
@@ -1029,6 +1032,7 @@ public WebServer (Context context)
 
     sb.append 
      ("<span class=\"pagesubtitle\">Playlist</span><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"javascript:random_album()\">Play a randomly-selected album</a><br/>");
     sb.append ("&nbsp;&nbsp;<a href=\"/gui_playlist\">View the current playlist</a><br/>");
     sb.append ("&nbsp;&nbsp;<a href=\"javascript:clear_playlist()\">Clear the playlist</a>");
     sb.append ("<p/>");
@@ -1267,6 +1271,30 @@ public WebServer (Context context)
     return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
         makeJSONStatusResponse 
          (0));
+    }
+
+  /** Play a random album. */ 
+  NanoHTTPD.Response playRandomAlbum()
+    {
+    Set<String> albums = audioDatabase.getAlbums();
+    int size = albums.size();
+    String album = "";
+    int item = new Random().nextInt(size); 
+    int i = 0;
+    for (String cand: albums)
+      {
+      i++;
+      if (i == item)
+        {
+        album = cand;
+        break;
+        }
+      }
+
+    playAlbumNow (album);
+    return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+        makeJSONStatusResponse 
+         (0, "Playing album '" + album + "'"));
     }
 
 

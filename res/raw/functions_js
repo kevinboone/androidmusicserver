@@ -206,6 +206,15 @@ function rescan_catalog()
 
 
 /*
+  random_album() invoked by a link on the HTML page
+*/
+function random_album()
+  {
+  make_command_request ("random_album", response_callback_gen_status);
+  }
+
+
+/*
   rescan_filesystem() invoked by a link on the HTML page
 */
 function rescan_filesystem()

@@ -13,7 +13,8 @@ Version 0.0.2.
 <img src="androidmusicserverscreenshot.png" alt="screenshot" width="400" align="left" style="margin-right:30px"/>
 
 Kevin's Music Server for Android provides a web browser interface to
-control playback of audio stored on relatively modern (4.x) Android devices. 
+control playback of audio files stored on relatively modern (4.x) 
+Android devices. 
 This allows the Android device
 to be used as a music server, in multi-room audio applications, among
 other things. It is a cut-down version of <a href="kmediad_server">kmediad</a>,
@@ -36,7 +37,8 @@ won't ever be appearing on
 the Android Market, because I can't afford to pay Google to host stuff that I'm
 giving away for free. Alternatively, if you're worried that this app might
 transmit all your secret passwords to villains, you're welcome to inspect
-and build from source (source code is also in the Downloads section).
+and build the application yourself (source code is also in the 
+Downloads section), or from <a href="https://github.com/kevinboone/androidmusicserver">github</a>.
 
 <h2>Operation</h2>
 
@@ -48,14 +50,18 @@ see an error message. There is also a "Stop" button which does what it says.
 <p/>
 All real operation of the app is from a Web browser. I hope that the
 browser interface is relatively self-explanatory -- just select an
-album from the list and click "Play now", or "Add" to append the
+album from one of the various lists and click "Play now", or "Add" 
+to append the
 tracks to the playlist. Alternatively, click the "Files" link at
 the bottom of the page and navigate
-the filesystem to find some audio files.
+the filesystem to find some audio files. Or just click "Random" to
+play a randomly-selected album.
 <p/>
 You can operate Android Music Server using a web browser on the device
 itself (if the browser has adequate JavaScript support); but the app
-is really intended to be operaed from a browser on a different machine. 
+is really intended to be operated from a browser on a different machine.
+It is intended for remote control of music playback; there are many 
+good media players for on-device operation.
 <p/>
 Android Music Server responds to remote control events -- from
 a bluetooth headset with control buttons, for example. In particular,
@@ -117,8 +123,9 @@ played, then playback will resume at the next playlist item when playback
 of the selected track finishes, if there is anything left to play in 
 the playlist.
 <p/>
-You can control the volume of playback using the "Vol up" and "Vol down"
-links at the bottom of the page. If you're using a headset, that might
+You can control the volume of playback by clicking on the loudspeaker
+buttons in the menu bar at the top of each page. 
+If you're using a headset, that might
 have its own volume control and, if it does, it probably sets the
 volume on the headset itself, not on the device. So, in that case, 
 to get full volume you probably need to turn up the volume both on
@@ -164,13 +171,14 @@ it in such cases.
 Android Music Server relies for its tag (e.g., album) 
 support entirely on the Android
 media scanner. If this isn't working (which is relatively common), 
-results will be variable. The app queries the media scanner only 
+results will be variable. The app queries the media scanner
 when it starts, so media added after starting may not be visible (even
-if the scanner is working). Please see the section 'Android media 
+if the scanner is working), unless you click the "Rescan media catalogue"
+link in the home page. Please see the section 'Android media 
 catalogue issues' for more information. 
 <p/>
-One particular oddity of the Android media scanner, is that it will sometimes 
-present video files as 'Music,' presmumably because they have sountracks.
+One particular oddity of the Android media scanner is that it will sometimes 
+present video files as 'Music,' presmumably because they have soundtracks.
 This app doesn't play video, so these entries in the album list are an
 irritation.
 <p/>
@@ -236,7 +244,7 @@ subject to a number of limitations.
 <li>
 Baked-in cover-art images can be quite large -- perhaps even photo-sized.
 Returning all the images on a page containing, say, a list of two hundred
-albums is a challenge for an Android device. Is the browser is also on a
+albums is a challenge for an Android device. If the browser is also on a
 mobile device, then the challenge is compounded. The music server therefore
 attempts to avoid sending images if it can avoid doing so. It sets
 an <code>Expires</code> header one hour in the future for all images, 
@@ -260,7 +268,7 @@ any better information. What this means is that if you restart the app
 whilst the browser still has images in its cache, the browser will get
 confused: because the image has a last-modified date in the future, but
 in the browser's cache it has not yet expired.
-Clearling the browser cache usually fixes this
+Clearing the browser cache usually fixes this
 problem. 
 </li>
 </ul>
@@ -271,8 +279,10 @@ Android Music Server provides a list of genres, to restrict the listing of
 albums to specific genres. Needless to say, for this to work the audio
 files must have valid genre tags.
 <p/>
-Querying the Android media catalogue for genre information is painfully
-slow. I believe that there is some problem with the internal implementation,
+Querying the Android media catalogue for genre information is 
+<i>excruciatingly</i>
+slow. I believe that there is some problem with the internal search
+ implementation,
 which seems to require the whole genre catalogue to be expanded into tracks
 and then a query run against each track. Whatever the reason, with large
 numbers of tracks (more than a few hundred) some short-cuts have to be
@@ -313,7 +323,7 @@ rescan every time a file is added or deleted, but many files will be of
 no interest to the application (documents, pictures), and rescanning
 like this could be overzealous. Instead, there is a link on the 
 home page 'Rescan the media catalog.' This will cause the music server
-to build its own lists of albums, artists, etc., from Android's catalogue.
+to rebuild its own lists of albums, artists, etc., from Android's catalogue.
 Of course, you could just restart the app.
 <p/>
 The second problem is that the media catalogue can sometimes get 
