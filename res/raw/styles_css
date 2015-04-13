@@ -1,3 +1,8 @@
+body
+  {
+  margin: 0;
+  padding: 0;
+  }
 
 a:link 
   {
@@ -71,4 +76,19 @@ a:active
   padding-top: 1em;
   }
 
+.menutable
+  {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  background: black;
+  background-color: black;
+  font-weight: bold;
+  font-family: sans-serif;
+  }
 
+
+.maincontent
+  {
+  margin: 2em;
+  }

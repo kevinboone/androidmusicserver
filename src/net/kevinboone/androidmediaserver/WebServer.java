@@ -504,8 +504,6 @@ public WebServer (Context context)
     sb.append ("<hr/>");
     sb.append ("<a href=\"/\">Home</a> | ");
     sb.append ("<a href=\"http://kevinboone.net/README_androidmusicserver.html\">Documentation</a> | ");
-    sb.append ("<a href=\"javascript:volume_up()\">Vol up</a> | ");
-    sb.append ("<a href=\"javascript:volume_down()\">Vol down</a> | ");
     sb.append ("<a href=\"/gui_files\">Files</a> | ");
     sb.append ("<a href=\"/gui_albums?" + makeGenParams (parameters) 
        + "\">Albums</a> | ");
@@ -514,8 +512,7 @@ public WebServer (Context context)
     sb.append ("<a href=\"/gui_artists?" + makeGenParams (parameters) 
        + "\">Artists</a> | ");
     sb.append ("<a href=\"/gui_playlist?" + makeGenParams (parameters) 
-       + "\">Playlist</a> | ");
-    sb.append ("<a href=\"javascript:clear_playlist()\">Clear playlist</a>");
+       + "\">Playlist</a>");
     sb.append ("<p/>");
 
     return new String (sb);
@@ -750,6 +747,18 @@ public WebServer (Context context)
         (R.raw.stopbutton_png);
       return new NanoHTTPD.Response (Response.Status.OK, "image/png", is);
       }
+    else if ("vol_up_png".equals (resource))
+      {
+      InputStream is = context.getResources().openRawResource 
+        (R.raw.vol_up_png);
+      return new NanoHTTPD.Response (Response.Status.OK, "image/png", is);
+      }
+    else if ("vol_down_png".equals (resource))
+      {
+      InputStream is = context.getResources().openRawResource 
+        (R.raw.vol_down_png);
+      return new NanoHTTPD.Response (Response.Status.OK, "image/png", is);
+      }
     else
       return new NanoHTTPD.Response 
         (Response.Status.OK, "text/plain", "No resource " + resource);
@@ -776,7 +785,7 @@ public WebServer (Context context)
 
   protected String makeHtmlFooter ()
     {
-    return "</body></html>\n";
+    return "</div></body></html>\n";
     }
 
   protected String makeRedirect (String url)

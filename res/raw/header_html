@@ -8,6 +8,29 @@
 
  <body onload="onload()">
 
+ <table border="0" class="menutable" cellpadding="5px">
+   <tr>
+    <td valign="top">
+      <a href="/gui_home">Home</a>
+    </td>
+    <td valign="top">
+      <a href="javascript:volume_up()">
+        <img src="/~~vol_up_png"/>
+      </a>
+    </td>
+    <td valign="top">
+      <font color="white">/</font>
+    </td>
+    <td valign="top">
+      <a href="javascript:volume_down()">
+        <img src="/~~vol_down_png"/>
+      </a>
+    </td>
+    <td valign="top" width="100%">
+    </td>
+   </tr>
+ </table>
+
  <table border="0">
    <tr>
       <td valign="top" id="logocell">
@@ -59,6 +82,8 @@
       </td>
     </tr>
   </table>
+
+ <div class="maincontent">
 
  <div style="overflow: auto; min-height: 2em;">
    <table cellpadding="0" cellspacing="0">
