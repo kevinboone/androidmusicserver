@@ -9,6 +9,7 @@ import java.util.*;
 import java.text.*;
 import java.io.*;
 import java.net.*;
+import android.os.*;
 import android.content.*;
 import android.graphics.*;
 import android.media.MediaPlayer;
@@ -667,6 +668,14 @@ public WebServer (Context context)
         {
         return volumeDown();
         }
+      else if ("rescan_catalog".equalsIgnoreCase (cmd))
+        {
+        return rescanCatalog();
+        }
+      else if ("rescan_filesystem".equalsIgnoreCase (cmd))
+        {
+        return rescanFilesystem();
+        }
       }
     catch (Exception e)
       {
@@ -674,8 +683,9 @@ public WebServer (Context context)
         makeJSONStatusResponse (e));
       }
 
-    return new NanoHTTPD.Response (Response.Status.OK, "text/html", 
-            makeRedirect ("/"));
+    // We should neve get here, unless somebody is probing the server
+    //   with random commands
+    return new NanoHTTPD.Response (Response.Status.OK, "text/html", "?");
     }
 
 
@@ -1015,6 +1025,13 @@ public WebServer (Context context)
     sb.append ("<p/>");
 
     sb.append 
+     ("<span class=\"pagesubtitle\">Administration</span><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"javascript:rescan_catalog()\">Rescan the media catalog (quick)</a><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"javascript:rescan_filesystem()\">Rescan the filesystem (slow)</a><br/>");
+    sb.append ("<p/>");
+
+
+    sb.append 
      ("<span class=\"pagesubtitle\">Help</span><br/>");
     sb.append ("&nbsp;&nbsp;<a href=\"http://kevinboone.net/README_androidmusicserver.html\">Read the on-line documentation</a><br/>");
     sb.append ("<p/>");
@@ -1274,6 +1291,27 @@ public WebServer (Context context)
     return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
         makeJSONStatusResponse 
          (0));
+    }
+
+  /** Rescan the Android media catalog */
+  NanoHTTPD.Response rescanCatalog ()
+    {
+    audioDatabase.scan(context);
+    return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+        makeJSONStatusResponse 
+         (0, "Rescan complete"));
+    }
+
+  /** Rescan the whole filesystem */
+  NanoHTTPD.Response rescanFilesystem ()
+    {
+    context.sendBroadcast 
+      (new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, 
+         android.net.Uri.parse
+            ("file://" + Environment.getExternalStorageDirectory())));
+    return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+        makeJSONStatusResponse 
+         (0, "Rescan initiated"));
     }
 
 

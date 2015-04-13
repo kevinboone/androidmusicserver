@@ -197,6 +197,24 @@ function clear_playlist()
 
 
 /*
+  rescan_catalog() invoked by a link on the HTML page
+*/
+function rescan_catalog()
+  {
+  make_command_request ("rescan_catalog", response_callback_gen_status);
+  }
+
+
+/*
+  rescan_filesystem() invoked by a link on the HTML page
+*/
+function rescan_filesystem()
+  {
+  make_command_request ("rescan_filesystem", response_callback_gen_status);
+  }
+
+
+/*
   volume_up() invoked by a link on the HTML page
 */
 function volume_up()

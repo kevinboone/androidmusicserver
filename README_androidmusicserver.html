@@ -166,7 +166,8 @@ support entirely on the Android
 media scanner. If this isn't working (which is relatively common), 
 results will be variable. The app queries the media scanner only 
 when it starts, so media added after starting may not be visible (even
-if the scanner is working).  
+if the scanner is working). Please see the section 'Android media 
+catalogue issues' for more information. 
 <p/>
 One particular oddity of the Android media scanner, is that it will sometimes 
 present video files as 'Music,' presmumably because they have sountracks.
@@ -295,6 +296,43 @@ artists. If many albums are of that type, the artist list could be very
 long.
 
 
+<h2>Android media catalogue issues</h2>
+
+Android maintains a catalogue of media files and their metadata (tags).
+When a file is added using a USB connection, or presented to the
+device on an SD card or similar, Android reads the metadata and updates
+the catalogue. Android Music Server relies entirely on this catalogue
+for information about albums, artists, etc. Two problems affect this
+application's use of the media catalogue.
+<p/>
+First, the application has to scan the catalogue to get lists of
+albums, artists, etc., for the display. This process is not usually
+very time-consuming, but not something that we want to do regularly.
+In principle, the music server could hook into the media scanner and
+rescan every time a file is added or deleted, but many files will be of
+no interest to the application (documents, pictures), and rescanning
+like this could be overzealous. Instead, there is a link on the 
+home page 'Rescan the media catalog.' This will cause the music server
+to build its own lists of albums, artists, etc., from Android's catalogue.
+Of course, you could just restart the app.
+<p/>
+The second problem is that the media catalogue can sometimes get 
+out-of-sync with the contents of storage. This isn't usually a problem
+with files added by USB, but can be a problem with files on removeable
+storage devices, and is particularly a problem if files are moved
+around using a general file manager (or, worse, at a command prompt,
+although most users probably won't do that). 
+<p/>
+The link 'Rescan the filesystem' will ask Android to start a complete
+rescan of the filesystem. Android is completely at liberty to 
+ignore this request and, in later versions, is increasingly willing to.
+With Android 5, rebooting may be the only way to force a complete
+rescan. Note that the Music Server user interface will not wait
+for the rescan, and rescanning the filesystem does not imply rescanning
+the media catalogue (because we have no way to know when the filesystem
+rescan is finished, if it even started.) 
+ 
+
 <h2>Disclaimer, etc</h2>
 I wrote Android Music Server server for my own use; I'm 
 publishing it in case somebody
@@ -302,6 +340,7 @@ else might get some benefit from it -- even if it's only to look at the source
 code and see how not to write an Android app. It might work for you, it
 might not. If it doesn't, you're very welcome to fix it. There is, as you
 might expect, no warranty of any kind.
+
 
 <h2>Revision history</h2>
 
