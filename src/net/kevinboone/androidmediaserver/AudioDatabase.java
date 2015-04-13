@@ -117,6 +117,36 @@ public class AudioDatabase
     return ret;
     }
   
+
+  public Set<String> getAlbumsByArtist (Context context, String artist)
+    {
+    Set<String> results = new TreeSet<String>();
+
+    Uri uri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+    Cursor cur = context.getContentResolver().query(uri, null,
+      MediaStore.Audio.Media.IS_MUSIC + " = 1", null, null);
+    if (cur.moveToFirst()) 
+      {
+      int artistColumn = cur.getColumnIndex(MediaStore.Audio.Media.ARTIST);
+      int albumColumn = cur.getColumnIndex(MediaStore.Audio.Media.ALBUM);
+
+      do 
+        {
+        String candArtist = cur.getString (artistColumn);
+        if (candArtist != null && candArtist.length() > 0 
+            && candArtist.equalsIgnoreCase (artist))
+          {
+          String album = cur.getString (albumColumn);
+          if (album != null && album.length() > 0)
+            results.add (album);
+          }
+        } while (cur.moveToNext());
+      }
+    cur.close();
+
+    return results;
+    }
+
   public Set<String> getAlbumsByGenre (Context context, String genre)
     {
     Set<String> results = new TreeSet<String>();
@@ -125,7 +155,7 @@ public class AudioDatabase
       List<String> trackUris = getAlbumURIs (context, album);
       for (String trackUri : trackUris)
         {
-        TrackInfo ti = getTrackInfo (context, trackUri); 
+        TrackInfo ti = getTrackInfo (context, trackUri, true); 
         if (genre.equals (ti.genre))
           {
           results.add (album);
@@ -166,6 +196,7 @@ public class AudioDatabase
   public List<String> getAlbumURIs (Context context, String album)
     {
     Vector<String> list = new Vector<String>();
+
     String escAlbum = EscapeUtils.escapeSQL (album);
     Uri uri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
     Cursor cur = context.getContentResolver().query(uri, null,
@@ -190,8 +221,17 @@ public class AudioDatabase
 
   /** Try to get track info from the uri, which may be a simple filename,
       or a content: uri. If it fails, return a TrackInfo with only the
-      URI and title (which is made up) set */
+      URI and title (which is made up) set. THis method does _not_ 
+      retrieve genre information, which is very slow. */
   TrackInfo getTrackInfo (Context context, String uri)
+    {
+    return getTrackInfo (context, uri, false);
+    }
+
+  /** Try to get track info from the uri, which may be a simple filename,
+      or a content: uri. If it fails, return a TrackInfo with only the
+      URI and title (which is made up) set */
+  TrackInfo getTrackInfo (Context context, String uri, boolean includeGenre)
     {
     try
       {
@@ -212,7 +252,10 @@ public class AudioDatabase
       ti.composer  = mmr.extractMetadata (mmr.METADATA_KEY_COMPOSER);
       ti.album = mmr.extractMetadata (mmr.METADATA_KEY_ALBUM);
       ti.trackNumber = mmr.extractMetadata (mmr.METADATA_KEY_CD_TRACK_NUMBER);
-      ti.genre = mmr.extractMetadata (mmr.METADATA_KEY_GENRE);
+      if (includeGenre)
+        ti.genre = mmr.extractMetadata (mmr.METADATA_KEY_GENRE);
+      else
+        ti.genre = "";
       return ti;
       }
     catch (Throwable e)

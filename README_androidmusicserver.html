@@ -19,10 +19,10 @@ to be used as a music server, in multi-room audio applications, among
 other things. It is a cut-down version of <a href="kmediad_server">kmediad</a>,
 which supports similar operations on Linux and Windows.
 <p/>
-This app provides only very rudimentary features at present: 
-audio tracks can be selected from a list of albums, or
+Audio tracks can be selected using a browser from a list of albums, or
 directly from the filesystem. You can restrict the album listing to particular
-genres rather than displaying all albums on the same page. Album cover
+genres or particular artists rather than displaying all 
+albums on the same page. Album cover
 art images can be displayed (but see notes below about this.)
 
 <h2>Installation</h2>
@@ -66,10 +66,25 @@ something in the playlist.
 
 <h2>Notes</h2>
 
+This application is intended to work with relatively modest
+collections of audio files, that are relatively tidily organized. 
+All lists (of albums, artists, etc) are displayed on a single,
+possibly long page. In practice it seems to work reasonably well
+with collections of a few hundred albums, but the user interface
+will struggle with thousands of albums. In general it assumes
+(as Android generally does) that audio tracks are organized into
+albums, and that at least the album, title, and artist tags are
+filled in. To play an album in the right order it also assumes that
+the track number tag is filled in, or that the titles when arranged
+into alphabetical order will give the same ordering as the original
+album. Everything about this application will work somewhat better
+if files are thoroughly and consistently tagged -- but that's true
+of most music players.
+<p/>
 The web interface is completely stateless; that is, everything it
 needs to know is captured in the URL supplied by the browser. So
 you can
-freely bookmark albums or filesystem locations in the browser. 
+freely bookmark albums, or artists, or filesystem locations. 
 <p/>
 When browsing the filesystem, you can add files one at a time to the playlist, 
 or add the directory that
@@ -105,15 +120,15 @@ the playlist.
 You can control the volume of playback using the "Vol up" and "Vol down"
 links at the bottom of the page. If you're using a headset, that might
 have its own volume control and, if it does, it probably sets the
-volume on the headset itself, not on the device.
+volume on the headset itself, not on the device. So, in that case, 
+to get full volume you probably need to turn up the volume both on
+the headset and in this application.
 <p/>
 Browsing the filesystem will probably be completely useless if you're the kind
 of person who dumps thousands of music files into a single folder, and relies
 on the device to order them by tags. You'll just see a page listing thousands
-of files, and you won't be able to find anything.
-<p/>
-Similarly, browing by album is only helpful if your audio files have
-album tags, and the device's media scanner is enabled and working correctly.
+of files, and you won't be able to find anything. Browsing by album should
+still be fine (but see note below about cover art.)
 <p/>
 Not a feature of this app, but it's helpful to know that some folders that
 contain media can be removed from the oversight of the Android media scanner
@@ -127,18 +142,11 @@ that use the media scanner.
 The are particular issues regarding the display of cover art: please
 see the section "Cover art" below.
 <p/>
-At present, only album or file/directory browsing is provided. In future I hope
-to support listing by artist, composer, genre, etc.
-<p/>
 Some Android devices are factory-configured to prevent <i>any</i>
 incoming network connection. Sorry but, without rooting the device,
 there's no way to change that, and this app simply won't work.
 Similarly, if your Android implementation shuts down the WiFi radio
-to save power when the screen blanks, this app won't work.
-<p/>
-The album list is presented as a single page. In practice this seems to
-be unproblematic with up to a few hundred albums. With huge numbers
-of albums, building the albums list might be a bit slow. 
+to save power when the screen blanks then, again, this app won't work.
 <p/>
 Android Media Server relies heavily on JavaScript to create and manage its
 web user interface. Your browser needs decent JavaScript support --
@@ -169,7 +177,7 @@ Whilst you can skip forward and back between tracks in the playlist,
 there is no general foward/rewind facility within a specific
 track. This is a tricky thing to implement within a web interface.
 <p/>
-At present, the app listens on port 8080, and that can't be changed.
+At present, the app listens on port 30000, and that can't be changed.
 <p/>
 There is quite a subtle limitation inherent in the way 
 Android audio works. Android Music Server registers itself to receive
@@ -275,6 +283,18 @@ them all is simply unfeasibly slow.
 <p/>
 Genres that have no associated tracks are silently ignored.
 
+<h2>Artist support</h2>
+
+When an entry is selected from the Artist list, any album that contains
+at least one track attributed to that artist is included in the 
+album list. That is, an album doesn't have to be limited to a single
+artist to be included in that artist's listing. 
+<p/>
+It's not at all uncommon for an album to contain tracks by many different
+artists. If many albums are of that type, the artist list could be very 
+long.
+
+
 <h2>Disclaimer, etc</h2>
 I wrote Android Music Server server for my own use; I'm 
 publishing it in case somebody
@@ -294,7 +314,7 @@ might expect, no warranty of any kind.
       April 12 2015 
     </td>
     <td valign="top">
-      Added preliminary cover art and genre filtering support
+      Added preliminary cover art, and genre/artist filtering support
     </td>
   </tr>
   <tr>
