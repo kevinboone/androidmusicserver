@@ -349,7 +349,7 @@ public WebServer (Context context)
     {
     StringBuffer sb = new StringBuffer();
 
-    sb.append ("<span class=\"pagetitle\">Albums by artist '" 
+    sb.append ("<span class=\"pagetitle\">Albums including artist '" 
      + artist + "'</span><p/>");
 
     Set<String> albums = audioDatabase.getAlbumsByArtist (context, artist);
