@@ -2,4 +2,9 @@
 <resources>
     <string name="app_name">Android music server</string>
     <string name="button_stop">Stop</string>
+    <string name="button_pause">Pause</string>
+    <string name="button_next">Next</string>
+    <string name="button_prev">Previous</string>
+    <string name="button_shutdown">Shutdown</string>
+    <string name="button_play">Play</string>
 </resources>

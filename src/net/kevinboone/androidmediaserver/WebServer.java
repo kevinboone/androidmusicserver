@@ -610,11 +610,11 @@ public WebServer (Context context)
         }
       else if ("stop".equalsIgnoreCase (cmd))
         {
-        stopPlayback();
+        return stopPlayback();
         }
       else if ("pause".equalsIgnoreCase (cmd))
         {
-        pause();
+        return pause();
         }
       else if (cmd.toLowerCase().startsWith ("play_file_now"))
         {

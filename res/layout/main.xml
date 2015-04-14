@@ -10,11 +10,148 @@
     android:layout_height="wrap_content"
     android:text=""
     />
-<Button xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/button_stop"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="@string/button_stop"
-    android:onClick="buttonStopClicked" />
+<TableLayout android:layout_width="wrap_content" 
+      android:layout_height="wrap_content">
+  <TableRow>
+    <TextView
+      android:layout_width="fill_parent"
+      android:padding="5dip"
+      android:layout_height="wrap_content"
+      android:gravity="right"
+      android:text="URL:"
+    />
+    <TextView
+      android:id="@+id/url"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:padding="5dip"
+      android:text=""
+    />
+  </TableRow>
+  <TableRow>
+    <TextView
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:padding="5dip"
+      android:gravity="right"
+      android:text="Status:"
+    />
+    <TextView
+      android:id="@+id/transport_status"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:padding="5dip"
+      android:text=""
+    />
+  </TableRow>
+  <TableRow>
+    <TextView
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:gravity="right"
+      android:text="Title:"
+      android:padding="5dip"
+    />
+    <TextView
+      android:id="@+id/title"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:padding="5dip"
+      android:text=""
+    />
+  </TableRow>
+  <TableRow>
+    <TextView
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:padding="5dip"
+      android:gravity="right"
+      android:text="Album:"
+    />
+    <TextView
+      android:id="@+id/album"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:padding="5dip"
+      android:text=""
+    />
+  </TableRow>
+  <TableRow>
+    <TextView
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:gravity="right"
+      android:padding="5dip"
+      android:text="Artist:"
+    />
+    <TextView
+      android:id="@+id/artist"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:padding="5dip"
+      android:text=""
+    />
+  </TableRow>
+</TableLayout>
+
+<View
+   android:layout_width="fill_parent"
+   android:layout_height="10dip"
+/>
+
+<View
+   android:layout_width="fill_parent"
+   android:layout_height="2dp"
+   android:background="#c0c0c0"
+/>
+
+<View
+   android:layout_width="fill_parent"
+   android:layout_height="10dip"
+/>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+  <Button xmlns:android="http://schemas.android.com/apk/res/android"
+      android:id="@+id/button_shutdown"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/button_shutdown"
+      android:onClick="buttonShutdownClicked" />
+  <Button xmlns:android="http://schemas.android.com/apk/res/android"
+      android:id="@+id/button_prev"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/button_prev"
+      android:onClick="buttonPrevClicked" />
+  <Button xmlns:android="http://schemas.android.com/apk/res/android"
+      android:id="@+id/button_play"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/button_play"
+      android:onClick="buttonPlayClicked" />
+  <Button xmlns:android="http://schemas.android.com/apk/res/android"
+      android:id="@+id/button_stop"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/button_stop"
+      android:onClick="buttonStopClicked" />
+  <Button xmlns:android="http://schemas.android.com/apk/res/android"
+      android:id="@+id/button_pause"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/button_pause"
+      android:onClick="buttonPauseClicked" />
+  <Button xmlns:android="http://schemas.android.com/apk/res/android"
+      android:id="@+id/button_next"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/button_next"
+      android:onClick="buttonNextClicked" />
+</LinearLayout>
+
 </LinearLayout>
 

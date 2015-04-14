@@ -46,7 +46,8 @@ This app is designed to run quietly in the background, so it
 has no substantive Android user interface. When you start it,
 if all is well you'll see the URL to which you should point your web browser.
 If there are problems, which will generally be WIFI-related, you'll
-see an error message. There is also a "Stop" button which does what it says.
+see an error message. There is also a "Stop" button which does shuts down
+the server completely, as well as stopping audio playback.
 <p/>
 All real operation of the app is from a Web browser. I hope that the
 browser interface is relatively self-explanatory -- just select an
@@ -201,6 +202,11 @@ be idle a lot of the time. If it took over the remote control when it
 was running, it would prevent other media apps using the remote control.
 There are, in fact, a number of popular media players that suffer from
 this exact problem, and it can be quite a nuisance.
+<p/>
+This application is, in essence, an unsecured web server. It does allow
+people on the same WIFI network to browse the contents of the device's
+storage -- at least those parts of it that contain audio. The application
+is not really intended for use in hostile environments. 
 <p/>
 The user interface is currently English-language only.
 <p/>
