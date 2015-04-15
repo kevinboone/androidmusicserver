@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Android music server</string>
+    <string name="app_name">Android Music Server</string>
     <string name="button_stop">Stop</string>
     <string name="button_pause">Pause</string>
     <string name="button_next">Next</string>

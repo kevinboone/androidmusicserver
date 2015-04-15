@@ -5,7 +5,7 @@
 
 <h1>Kevin's Music Server for Android </h1>
 
-Version 0.0.2.
+Version 0.0.3.
 
 <h2>What is this?</h2>
 
@@ -26,6 +26,7 @@ genres or particular artists rather than displaying all
 albums on the same page. Album cover
 art images can be displayed (but see notes below about this.)
 
+<br clear="all"/>
 <h2>Installation</h2>
 
 Download the APK package from the Downloads section at the
@@ -40,14 +41,20 @@ transmit all your secret passwords to villains, you're welcome to inspect
 and build the application yourself (source code is also in the 
 Downloads section), or from <a href="https://github.com/kevinboone/androidmusicserver">github</a>.
 
+<br clear="all"/>
 <h2>Operation</h2>
+
+<img src="androidmusicserverscreenshot2.png" alt="screenshot" width="400" align="right" style="margin-left:30px"/>
 
 This app is designed to run quietly in the background, so it 
 has no substantive Android user interface. When you start it,
 if all is well you'll see the URL to which you should point your web browser.
 If there are problems, which will generally be WIFI-related, you'll
-see an error message. There is also a "Stop" button which does shuts down
-the server completely, as well as stopping audio playback.
+see an error message. The app displays some information about the audio
+track that is currently playing, if there is one, and provides some
+buttons to control playback, in a rudimentary way. The "Shutdown" button
+shuts the application down completely, including its background
+service.
 <p/>
 All real operation of the app is from a Web browser. I hope that the
 browser interface is relatively self-explanatory -- just select an
@@ -71,6 +78,7 @@ Of course, for next track and previous track to work, there must be
 something in the playlist. 
 
 
+<br clear="all"/>
 <h2>Notes</h2>
 
 This application is intended to work with relatively modest
@@ -363,18 +371,38 @@ the media catalogue (because we have no way to know when the filesystem
 rescan is finished, if it even started.) 
  
 
-<h2>Disclaimer, etc</h2>
+<h2>Legal and copying</h2>
+
+Android Music Server is open-source, and released under the terms
+of the GNU Public Licence, version 2.0. It contains components from
+a number of different authors. Please see the individual source
+files for detailed licencing and redistribution rights. Broadly, 
+however, Android Music Server is free of charge and may be freely
+copied and distributed, so long as the original authors continue 
+to be acknowledged. 
+<p/>
 I wrote Android Music Server server for my own use; I'm 
 publishing it in case somebody
 else might get some benefit from it -- even if it's only to look at the source
 code and see how not to write an Android app. It might work for you, it
-might not. If it doesn't, you're very welcome to fix it. There is, as you
-might expect, no warranty of any kind.
+might not. If it doesn't, you're very welcome to fix it. 
+
 
 
 <h2>Revision history</h2>
 
 <table cellpadding="5px">
+  <tr>
+    <td valign="top">
+      0.0.3
+    </td>
+    <td valign="top">
+      April 15 2015 
+    </td>
+    <td valign="top">
+      Added on-device status display and controls. 
+    </td>
+  </tr>
   <tr>
     <td valign="top">
       0.0.2
@@ -402,7 +430,7 @@ might expect, no warranty of any kind.
 
 <h2>Downloads</h2>
 
-<a href="androidmusicserver-0.0.2.zip">Source code</a><br/>
-<a href="androidmusicserver-0.0.2.apk">Android APK package</a><br/>
+<a href="androidmusicserver-0.0.3.zip">Source code</a><br/>
+<a href="androidmusicserver-0.0.3.apk">Android APK package</a><br/>
 
 
