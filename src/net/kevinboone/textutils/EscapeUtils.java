@@ -4,7 +4,7 @@
  *  Distributed under the terms of the GNU Public Licence, version 2.0
  */
 
-package net.kevinboone.androidmediaserver;
+package net.kevinboone.textutils;
 
 public class EscapeUtils
   {

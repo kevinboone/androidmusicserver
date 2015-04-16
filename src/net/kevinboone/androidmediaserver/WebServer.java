@@ -15,31 +15,27 @@ import android.graphics.*;
 import android.media.MediaPlayer;
 import android.util.Log;
 import android.media.*;
+import android.media.audiofx.*;
+import net.kevinboone.androidmusicplayer.Player;
+import net.kevinboone.androidmusicplayer.PlayerException;
+import net.kevinboone.androidmusicplayer.TrackInfo;
+import net.kevinboone.androidmusicplayer.Errors;
+import net.kevinboone.textutils.*;
 
-public class WebServer extends NanoHTTPD implements
-   MediaPlayer.OnCompletionListener,
-   AudioManager.OnAudioFocusChangeListener
+public class WebServer extends NanoHTTPD 
 {
 protected static String DOCROOT="/";
-private MediaPlayer mediaPlayer = new MediaPlayer();
-private String currentPlaybackUri = null; //File 
-private TrackInfo currentPlaybackTrackInfo = null;
 private Context context = null;
-protected List<TrackInfo> playlist = new Vector<TrackInfo>();
-protected int currentPlaylistIndex = -1;
-protected AudioDatabase audioDatabase = null;
 private String lastModifiedString = null; 
 private Date lastModifiedDate = null; 
+private Player player;
 
 public WebServer (Context context)
   {
   super(30000);
   this.context = context;
+  player = new Player (context);
   setLastModifiedToNow();
-  mediaPlayer.setOnCompletionListener (this);
-  RemoteControlReceiver.setWebServer (this);
-  audioDatabase = new AudioDatabase();
-  audioDatabase.scan (context);
   }
 
   @Override
@@ -153,6 +149,10 @@ public WebServer (Context context)
         return handleGuiTracksByAlbum (parameters);
       if (uri.indexOf ("/gui_tracks_by_album") == 0)
         return handleGuiTracksByAlbum (parameters);
+      if (uri.indexOf ("/gui_eq") == 0)
+        return handleGuiEq (parameters);
+      if (uri.indexOf ("gui_eq") == 0)
+        return handleGuiEq (parameters);
       return new NanoHTTPD.Response 
         (Response.Status.OK, "text/plain", "Unknown request: " + uri); // TODO
       }
@@ -225,7 +225,7 @@ public WebServer (Context context)
     sb.append ("<span class=\"pagetitle\">" + "Albums" + "</span><p/>");
     sb.append ("<table>");
 
-    Set<String> albums = audioDatabase.getAlbums();
+    Set<String> albums = player.getAlbums();
     sb.append (makeAlbumListFromSet (parameters, covers, albums));
     return new String (sb);
     }
@@ -240,7 +240,7 @@ public WebServer (Context context)
     sb.append ("<span class=\"pagetitle\">" + "Genres" + "</span><p/>");
     sb.append ("<table>");
 
-    Set<String> genres = audioDatabase.getGenres();
+    Set<String> genres = player.getGenres();
     for (String genre: genres)
       {
       sb.append ("<tr>");
@@ -268,7 +268,7 @@ public WebServer (Context context)
     sb.append ("<span class=\"pagetitle\">" + "Artists" + "</span><p/>");
     sb.append ("<table>");
 
-    Set<String> artists = audioDatabase.getArtists();
+    Set<String> artists = player.getArtists();
     for (String artist: artists)
       {
       sb.append ("<tr>");
@@ -298,7 +298,7 @@ public WebServer (Context context)
 
     sb.append ("<span class=\"pagetitle\">" + album + "</span><p/>");
 
-    List<String> uris = audioDatabase.getAlbumURIs (context, album);
+    List<String> uris = player.getAlbumTrackUris (album);
     
     if (covers)
       {
@@ -316,7 +316,7 @@ public WebServer (Context context)
       sb.append (" <a href=\"javascript:add_to_playlist('" 
               + EscapeUtils.escapeJSON (uri) + 
                 "')\"><span class=\"textbuttonspan\">Add</span></a> ");
-      TrackInfo ti = audioDatabase.getTrackInfo (context, uri);
+      TrackInfo ti = player.getTrackInfo (uri);
       sb.append (ti.title);
       sb.append ("<br/>");
       }
@@ -335,7 +335,7 @@ public WebServer (Context context)
     sb.append ("<span class=\"pagetitle\">Albums in genre '" 
      + genre + "'</span><p/>");
 
-    Set<String> albums = audioDatabase.getAlbumsByGenre (context, genre);
+    Set<String> albums = player.getAlbumsByGenre (genre);
     sb.append (makeAlbumListFromSet (parameters, covers, albums));
 
     return new String (sb);
@@ -352,7 +352,7 @@ public WebServer (Context context)
     sb.append ("<span class=\"pagetitle\">Albums including artist '" 
      + artist + "'</span><p/>");
 
-    Set<String> albums = audioDatabase.getAlbumsByArtist (context, artist);
+    Set<String> albums = player.getAlbumsByArtist (artist);
     sb.append (makeAlbumListFromSet (parameters, covers, albums));
 
     return new String (sb);
@@ -397,7 +397,7 @@ public WebServer (Context context)
         File direntry = new File (DOCROOT + "/" + uri + "/" + list[i]);
         if (direntry.isFile ())
           {
-          if (isPlayableFile (list[i]))
+          if (Player.isPlayableFile (list[i]))
             {
             sb.append (" <a href=\"javascript:play_file_now('" 
               + EscapeUtils.escapeJSON (uri + "/" + list[i]) + 
@@ -441,58 +441,21 @@ public WebServer (Context context)
   Start playback of the file, and set the currentUri.
   */
   void playFileNow (String uri)
-      throws IOException
+      throws PlayerException 
     {
-    mediaPlayer.reset();
-    if (uri.startsWith ("content:"))
-      {
-      android.net.Uri contentUri = android.net.Uri.parse (uri);
-      mediaPlayer.setDataSource (context, contentUri);
-      }
-    else
-      {
-      String filename = DOCROOT + "/" + uri;
-      mediaPlayer.setDataSource (filename);
-      }
-    mediaPlayer.prepare();
-    getAudioFocus();
-    currentPlaybackUri = uri;
-    currentPlaybackTrackInfo = audioDatabase.getTrackInfo (context, uri);
-    mediaPlayer.start();
+    player.playFileNow (uri);
     }
 
 
   /**
-  Adds the specified item, which might be a directory, to the playlist,
+  Adds the specified filesystem item, which might be a directory, 
+  and is relative to the DOCROOT, to the playlist,
   and return the number of items added.
   */
   int addToPlaylist (String uri)
-      throws IOException
+      throws PlayerException 
     {
-    File f = new File (DOCROOT + "/" + uri);
-    if (f.isDirectory ())
-      {
-      String[] list = f.list();      
-      int count = 0;
-      for (String name : list)
-        {
-        String cand = uri + "/" + name;
-        File f2 = new File (DOCROOT + "/" + cand);
-        if (isPlayableFile (f2.toString()))
-          {
-          TrackInfo ti = audioDatabase.getTrackInfo (context, cand);
-          playlist.add (ti);
-          count++;
-          }
-        }
-      return count;
-      }
-    else
-      {
-      TrackInfo ti = audioDatabase.getTrackInfo (context, uri);
-      playlist.add (ti);
-      return 1; 
-      }
+    return player.addFileOrDirectoryToPlaylist (DOCROOT + "/" + uri);
     }
 
 
@@ -545,13 +508,13 @@ public WebServer (Context context)
     try
       {
       byte[] ep = null;
-      List<String> trackUris = audioDatabase.getAlbumURIs (context, album);
+      List<String> trackUris = player.getAlbumTrackUris (album);
       for (String uri : trackUris)
         {
         if (filePath == null)
-          filePath = audioDatabase.getFilePathFromContentUri 
-            (context, android.net.Uri.parse(uri));
-        ep = audioDatabase.getEmbeddedPicture (context, uri);
+          filePath = player.getFilePathFromContentUri 
+            (android.net.Uri.parse(uri));
+        ep = player.getEmbeddedPictureForTrackUri (uri);
         if (ep != null)
           {
           break;
@@ -579,7 +542,6 @@ public WebServer (Context context)
       else if (filePath != null)
         {
         String coverFile = CoverUtils.getCoverFileForTrackFile (filePath);
-        Log.w ("XXX", "COVER FILE=" + coverFile); 
         if (coverFile != null)
           return serveFileResource (coverFile);
         else
@@ -640,6 +602,28 @@ public WebServer (Context context)
         String album = cmd.substring (15); 
         return playAlbumNow (album);
         }
+      else if (cmd.toLowerCase().startsWith ("set_eq_level"))
+        {
+        String arg = cmd.substring (13); 
+        int p = arg.indexOf (','); 
+        String sBand = arg.substring (0, p);
+        String sLevel = arg.substring (p+1);
+        int band = Integer.parseInt (sBand);
+        int level = Integer.parseInt (sLevel);
+        return setEqLevel (band, level);
+        }
+      else if (cmd.toLowerCase().startsWith ("set_bb_level"))
+        {
+        String arg = cmd.substring (13); 
+        int level = Integer.parseInt (arg);
+        return setBBLevel (level);
+        }
+      else if (cmd.toLowerCase().startsWith ("set_vol_level"))
+        {
+        String arg = cmd.substring (14); 
+        int level = Integer.parseInt (arg);
+        return setVolLevel (level);
+        }
       else if ("play".equalsIgnoreCase (cmd))
         {
         return play();
@@ -664,13 +648,33 @@ public WebServer (Context context)
         {
         return playPrevInPlaylist();
         }
-      else if ("volume_up".equalsIgnoreCase (cmd))
+      else if ("enable_bass_boost".equalsIgnoreCase (cmd))
         {
-        return volumeUp();
+        return enableBassBoost();
+        }
+      else if ("disable_bass_boost".equalsIgnoreCase (cmd))
+        {
+        return disableBassBoost();
+        }
+      else if ("enable_eq".equalsIgnoreCase (cmd))
+        {
+        return enableEq();
+        }
+      else if ("enable_eq".equalsIgnoreCase (cmd))
+        {
+        return disableEq();
+        }
+      else if ("disable_eq".equalsIgnoreCase (cmd))
+        {
+        return disableEq();
         }
       else if ("volume_down".equalsIgnoreCase (cmd))
         {
         return volumeDown();
+        }
+      else if ("volume_up".equalsIgnoreCase (cmd))
+        {
+        return volumeUp();
         }
       else if ("rescan_catalog".equalsIgnoreCase (cmd))
         {
@@ -817,8 +821,10 @@ public WebServer (Context context)
     String title = "";
     String album = "";
     String artist = "";
-    if (mediaPlayer.isPlaying())
+    if (player.isPlaying())
       {
+      TrackInfo currentPlaybackTrackInfo = 
+        player.getCurrentPlaybackTrackInfo();
       transport = "playing";
       if (currentPlaybackTrackInfo != null)
         {
@@ -826,22 +832,24 @@ public WebServer (Context context)
         album = currentPlaybackTrackInfo.album;
         artist = currentPlaybackTrackInfo.artist;
         }
-      uri = currentPlaybackUri;
-      duration = "" + mediaPlayer.getDuration();
-      position = "" + mediaPlayer.getCurrentPosition();
+      uri = player.getCurrentPlaybackUri();
+      duration = "" + player.getCurrentPlaybackDurationMsec();
+      position = "" + player.getCurrentPlaybackPositionMsec();
       }
-    else if (currentPlaybackUri != null)
+    else if (player.getCurrentPlaybackUri() != null)
       {
       transport = "paused";
+      TrackInfo currentPlaybackTrackInfo = 
+        player.getCurrentPlaybackTrackInfo();
       if (currentPlaybackTrackInfo != null)
         {
         title = currentPlaybackTrackInfo.title;
         album = currentPlaybackTrackInfo.album;
         artist = currentPlaybackTrackInfo.artist;
         }
-      uri = currentPlaybackUri;
-      duration = "" + mediaPlayer.getDuration();
-      position = "" + mediaPlayer.getCurrentPosition();
+      uri = player.getCurrentPlaybackUri();
+      duration = "" + player.getCurrentPlaybackDurationMsec();
+      position = "" + player.getCurrentPlaybackPositionMsec();
       }
     String ret="{" + "status:0,"  + 
       "transport_status:'" + EscapeUtils.escapeJSON(transport) + "'," +
@@ -977,6 +985,15 @@ public WebServer (Context context)
     return new NanoHTTPD.Response (answer);
     }
 
+  protected Response handleGuiEq (Map<String,String> parameters)
+    {
+    String answer = makeHtmlHeader();
+    answer += makeEq (parameters); 
+    answer += makeControls(parameters);
+    answer += makeHtmlFooter();
+    return new NanoHTTPD.Response (answer);
+    }
+
   /**
     Make the genre list page. 
   */
@@ -1008,7 +1025,97 @@ public WebServer (Context context)
     }
 
 
+  protected String makeEq (Map<String,String> parameters)
+    {
+    StringBuffer sb = new StringBuffer();
 
+    sb.append 
+     ("<span class=\"pagesubtitle\">EQ</span><br/>");
+    sb.append ("<p/>\n");
+
+    boolean enabled = player.getEqEnabled();
+    if (enabled)
+      {
+      sb.append 
+        ("<input type=\"checkbox\" name=\"eq_enabled\" checked=\"checked\" onclick='onClickEqEnabled(this);window.location.reload(true);'/> Enabled <br/>\n");
+
+      sb.append ("<p/>\n");
+
+      int numBands = player.getEqNumberOfBands();
+      int minLevel = player.getEqMinLevel(); 
+      int maxLevel = player.getEqMaxLevel();
+      for (int i = 0; i < numBands && i < player.MAX_EQ_BANDS; i++)
+        {
+        int level = player.getEqBandLevel (i); 
+        String sFreqRange = player.getEqBandFreqRange (i);
+
+        sb.append (sFreqRange);
+        sb.append ("<br/>\n");
+        sb.append ("<div class=\"eqslider\">\n");
+        sb.append ("<input id=\"eqslider" + i + "\" type=\"range\" min=\"" + 
+          minLevel + "\" max=\"" + maxLevel + "\" step=\"1\" value=\"" + 
+            level + "\" onchange=\"onChangeEqSlider(" + i + ",this.value)\"/>\n");
+        sb.append ("</div>\n");
+        sb.append ("<p/>\n");
+        }
+      }
+   else
+      {
+      sb.append 
+        ("<input type=\"checkbox\" name=\"eq_enabled\" onclick='onClickEqEnabled(this);window.location.reload(true);'/> Enabled <br/>\n");
+      }
+
+    sb.append ("<p/>\n");
+    sb.append 
+     ("<span class=\"pagesubtitle\">Bass boost</span><br/>");
+    sb.append ("<p/>\n");
+
+    boolean bbEnabled = player.getBBEnabled();
+    if (bbEnabled)
+      {
+      int bbStrength = player.getBBStrength(); 
+      sb.append  ("<input type=\"checkbox\" name=\"bb_enabled\" checked=\"checked\" onclick='onClickBBEnabled(this);window.location.reload(true);'/> Enabled <br/>\n");
+
+      sb.append ("<p/>\n");
+      sb.append ("Bass boost");
+      sb.append ("<br/>\n");
+      
+      sb.append ("<div class=\"bbslider\">\n");
+        sb.append ("<input id=\"bbslider\" type=\"range\" min=\"" + 
+          "0" + "\" max=\"" + "1000" + "\" step=\"1\" value=\"" + 
+            bbStrength + "\" onchange=\"onChangeBBSlider(this.value)\"/>\n");
+        sb.append ("</div>\n");
+
+      sb.append ("<p/>\n");
+      } 
+    else
+      {
+      sb.append 
+        ("<input type=\"checkbox\" name=\"bb_enabled\" onclick='onClickBBEnabled(this);window.location.reload(true);'/> Enabled <br/>\n");
+      sb.append ("<p/>\n");
+      }
+
+    AudioManager audioManager = (AudioManager) 
+      context.getSystemService (Context.AUDIO_SERVICE);
+    int maxVol = audioManager.getStreamMaxVolume 
+      (AudioManager.STREAM_MUSIC);
+    int vol = audioManager.getStreamVolume 
+      (AudioManager.STREAM_MUSIC);
+
+    sb.append 
+     ("<span class=\"pagesubtitle\">Volume</span><br/>");
+    sb.append ("<p/>\n");
+
+    sb.append ("<div class=\"volslider\">\n");
+    sb.append ("<input id=\"volslider\" type=\"range\" min=\"" + 
+          "0" + "\" max=\"" + maxVol + "\" step=\"1\" value=\"" + 
+            vol + "\" onchange=\"onChangeVolSlider(this.value)\"/>\n");
+    sb.append ("</div>\n");
+
+    sb.append ("<p/>\n");
+
+    return new String (sb);
+    }
 
   
   protected String makeHomePage (Map<String,String> parameters)
@@ -1040,6 +1147,11 @@ public WebServer (Context context)
     sb.append ("&nbsp;&nbsp;<a href=\"/gui_playlist\">View the current playlist</a><br/>");
     sb.append ("&nbsp;&nbsp;<a href=\"javascript:clear_playlist()\">Clear the playlist</a><br/>");
     sb.append ("&nbsp;&nbsp;<a href=\"javascript:shuffle_playlist()\">Shuffle the playlist</a>");
+    sb.append ("<p/>");
+
+    sb.append 
+     ("<span class=\"pagesubtitle\">Audio</span><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"/gui_eq\">Equalizer, etc</a><br/>");
     sb.append ("<p/>");
 
     sb.append 
@@ -1078,13 +1190,13 @@ public WebServer (Context context)
     {
     String answer = makeHtmlHeader();
     answer += "<span class=\"pagetitle\">Playlist</span><p/>"; 
-    if (playlist.size() == 0)
+    if (player.getPlaylist().size() == 0)
       {
       answer += "<i>Playlist is empty</i>"; 
       }
     else
       {
-      for (TrackInfo ti : playlist)
+      for (TrackInfo ti : player.getPlaylist())
         {
         answer += ti.title; 
         answer += "<br/>"; 
@@ -1103,35 +1215,22 @@ public WebServer (Context context)
     }
 
 
-  /** Returns true if the filename suggests mp3, aac, etc. */
-  boolean isPlayableFile (String name)
-    {
-    int p = name.lastIndexOf ('.');
-    if (p <= 0) return false;
-    String ext = name.substring (p);
-    if (".mp3".equalsIgnoreCase (ext)) return true;
-    if (".m4a".equalsIgnoreCase (ext)) return true;
-    if (".aac".equalsIgnoreCase (ext)) return true;
-    if (".ogg".equalsIgnoreCase (ext)) return true;
-    if (".wma".equalsIgnoreCase (ext)) return true;
-    if (".flac".equalsIgnoreCase (ext)) return true;
-    return false;
-    }
-
   /** Handle play request, but playing either the playlist, or
       unpausing if we are paused. */
   NanoHTTPD.Response play()
     {
-    if (currentPlaybackUri != null)
-          {
-          // We are paused (or even plaing), not stopped
-          getAudioFocus();
-          mediaPlayer.start();
-          return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
-            makeJSONStatusResponse (0));
-          }
-    else
-          return playFromStartOfPlaylist();
+    try
+      {
+      player.play ();
+      return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+        makeJSONStatusResponse (0));
+      }
+    catch (PlayerException e)
+      {
+      int code = e.getCode();
+      return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+        makeJSONStatusResponse (code, e.getMessage()));
+      }
     }
 
 
@@ -1140,28 +1239,17 @@ public WebServer (Context context)
       URI are set. */
   NanoHTTPD.Response playInPlaylist (int index)
     {
-    if (playlist.size() == 0)
-      return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
-        makeJSONStatusResponse 
-         (Errors.ERR_PL_EMPTY, Errors.perror (Errors.ERR_PL_EMPTY)));
-
-    if (index < 0 || index >= playlist.size())
-      return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
-        makeJSONStatusResponse 
-         (Errors.ERR_PL_RANGE, Errors.perror (Errors.ERR_PL_RANGE)));
-
-    String uri = playlist.get (index).uri;
-    currentPlaylistIndex = index;
     try
       {
-      playFileNow (uri);
+      player.playInPlaylist (index);
       return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
         makeJSONStatusResponse (0));
       }
-    catch (Exception e) 
+    catch (PlayerException e)
       {
+      int code = e.getCode();
       return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
-        makeJSONStatusResponse (e));
+        makeJSONStatusResponse (code, e.getMessage()));
       }
     }
 
@@ -1169,49 +1257,71 @@ public WebServer (Context context)
   /** Stops playback. */
   NanoHTTPD.Response stopPlayback()
     {
-    mediaPlayer.reset();
-    releaseAudioFocus();
-    currentPlaybackUri = null;
-    currentPlaybackTrackInfo = null; 
+    player.stop();
     return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
       makeJSONStatusResponse (0));
     }
+
+
+  NanoHTTPD.Response setEqLevel (int band, int level)
+    {
+    player.setEqBandLevel (band, level);
+    return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+      makeJSONStatusResponse (0));
+    }
+
+
+  NanoHTTPD.Response setBBLevel (int level)
+    {
+    player.setBBStrength (level);
+    return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+      makeJSONStatusResponse (0));
+    }
+
+  NanoHTTPD.Response setVolLevel (int level)
+    {
+    AudioManager audioManager = (AudioManager) 
+      context.getSystemService (Context.AUDIO_SERVICE);
+    audioManager.setStreamVolume (AudioManager.STREAM_MUSIC,  level, 0);
+    return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+      makeJSONStatusResponse (0));
+    }
+
 
   /** Adds the whole album to the playlist, clearing the old playlist, 
  *    and starts it. */
   NanoHTTPD.Response playAlbumNow (String album)
     {
-    List<String> albumURIs = audioDatabase.getAlbumURIs (context, album);
-    int count = 0;
-    clearPlaylist();
-    for (String uri : albumURIs)
+    try
       {
-      TrackInfo ti = audioDatabase.getTrackInfo (context, uri);
-      playlist.add (ti);
-      count++;
+      int count = player.playAlbumNow (album);
+      return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+        makeJSONStatusResponse (0, "Put " + count + " item(s) in playlist"));
       }
- 
-    playFromStartOfPlaylist();
-
-    return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
-      makeJSONStatusResponse (0, "Put " + count + " item(s) in playlist"));
+    catch (PlayerException e)
+      {
+      int code = e.getCode();
+      return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+        makeJSONStatusResponse (code, e.getMessage()));
+      }
     }
 
 
   /** Adds the whole album to the playlist, preserving the old playlist. */
   NanoHTTPD.Response addAlbumToPlaylist (String album)
     {
-    List<String> albumURIs = audioDatabase.getAlbumURIs (context, album);
-    int count = 0;
-    for (String uri : albumURIs)
+    try
       {
-      TrackInfo ti = audioDatabase.getTrackInfo (context, uri);
-      playlist.add (ti);
-      count++;
+      int count = player.addAlbumToPlaylist (album);
+      return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+        makeJSONStatusResponse (0, "Added " + count + " item(s) to playlist"));
       }
- 
-    return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
-      makeJSONStatusResponse (0, "Added " + count + " item(s) to playlist"));
+    catch (PlayerException e)
+      {
+      int code = e.getCode();
+      return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+        makeJSONStatusResponse (code, e.getMessage()));
+      }
     }
 
 
@@ -1229,22 +1339,19 @@ public WebServer (Context context)
       URI are set. */
   NanoHTTPD.Response playNextInPlaylist()
     {
-    if (playlist.size() == 0)
-      return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
-        makeJSONStatusResponse 
-         (Errors.ERR_PL_EMPTY, Errors.perror (Errors.ERR_PL_EMPTY)));
-    
-    currentPlaylistIndex++;
-
-    if (currentPlaylistIndex >= playlist.size())
+    try
       {
-      currentPlaylistIndex = playlist.size();
+      player.movePlaylistIndexForward();
+      player.playCurrentPlaylistItem();
       return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
-        makeJSONStatusResponse 
-         (Errors.ERR_PL_RANGE, Errors.perror (Errors.ERR_PL_RANGE)));
+        makeJSONStatusResponse (0));
       }
-
-    return playInPlaylist (currentPlaylistIndex);
+    catch (PlayerException e)
+      {
+      int code = e.getCode();
+      return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+        makeJSONStatusResponse (code, e.getMessage()));
+      }
     }
 
 
@@ -1253,34 +1360,32 @@ public WebServer (Context context)
       URI are set. */
   NanoHTTPD.Response playPrevInPlaylist()
     {
-    if (playlist.size() == 0)
-      return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
-        makeJSONStatusResponse 
-         (Errors.ERR_PL_EMPTY, Errors.perror (Errors.ERR_PL_EMPTY)));
-    
-    currentPlaylistIndex--;
-
-    if (currentPlaylistIndex < 0) 
+    try
       {
-      currentPlaylistIndex = 0;
+      player.movePlaylistIndexBack();
+      player.playCurrentPlaylistItem();
       return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
-        makeJSONStatusResponse 
-         (Errors.ERR_PL_RANGE, Errors.perror (Errors.ERR_PL_RANGE)));
+        makeJSONStatusResponse (0));
       }
-
-    return playInPlaylist (currentPlaylistIndex);
+    catch (PlayerException e)
+      {
+      int code = e.getCode();
+      return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+        makeJSONStatusResponse (code, e.getMessage()));
+      }
     }
 
 
   /** Shuffle the playlist. */
   NanoHTTPD.Response shufflePlaylist()
     {
-    if (playlist.size() == 0)
+    if (player.getPlaylist().size() == 0)
       return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
         makeJSONStatusResponse 
          (Errors.ERR_PL_EMPTY, Errors.perror (Errors.ERR_PL_EMPTY)));
     
-    Collections.shuffle (playlist); 
+    player.shufflePlaylist();
+
     return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
         makeJSONStatusResponse (0));
     }
@@ -1290,11 +1395,7 @@ public WebServer (Context context)
       success code. */
   NanoHTTPD.Response clearPlaylist()
     {
-    mediaPlayer.reset();
-    releaseAudioFocus();
-    playlist = new Vector<TrackInfo>();
-    currentPlaybackUri = null;
-    currentPlaybackTrackInfo = null;
+    player.clearPlaylist();
     return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
         makeJSONStatusResponse 
          (0));
@@ -1304,7 +1405,7 @@ public WebServer (Context context)
   /** Play a random album. */ 
   NanoHTTPD.Response playRandomAlbum()
     {
-    Set<String> albums = audioDatabase.getAlbums();
+    Set<String> albums = player.getAlbums();
     int size = albums.size(); 
     if (size == 0)
       return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
@@ -1335,9 +1436,41 @@ public WebServer (Context context)
   /** Pause. */
   NanoHTTPD.Response pause()
     {
-    mediaPlayer.pause();
+    player.pause();
     return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
             makeJSONStatusResponse (0));
+    }
+
+  /** Enable bass boost. */
+  NanoHTTPD.Response enableBassBoost()
+    {
+    player.setBBEnabled (true);
+    return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+      makeJSONStatusResponse (0, "Bass boost enabled"));
+    }
+
+  /** Disable bass boost. */
+  NanoHTTPD.Response disableBassBoost()
+    {
+    player.setBBEnabled (false);
+    return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+      makeJSONStatusResponse (0, "Bass boost disabled"));
+    }
+
+  /** Enable EQ. */
+  NanoHTTPD.Response enableEq()
+    {
+    player.setEqEnabled (true);
+    return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+      makeJSONStatusResponse (0, "EQ enabled"));
+    }
+
+  /** Disable EQ. */
+  NanoHTTPD.Response disableEq()
+    {
+    player.setEqEnabled (false);
+    return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
+      makeJSONStatusResponse (0, "EQ disabled"));
     }
 
   /** Volume up. */
@@ -1367,7 +1500,7 @@ public WebServer (Context context)
   /** Rescan the Android media catalog */
   NanoHTTPD.Response rescanCatalog ()
     {
-    audioDatabase.scan(context);
+    player.scanAudioDatabase ();
     return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
         makeJSONStatusResponse 
          (0, "Rescan complete"));
@@ -1385,48 +1518,6 @@ public WebServer (Context context)
          (0, "Rescan initiated"));
     }
 
-
-  /** Invoked by the Android player when playback of an item is complete.
-      Try to advance to the next playlist item. */
-  public void onCompletion (MediaPlayer mp)
-    {
-    currentPlaybackUri = null; // set current URI so it' s clear we
-                               // aren't just paused
-    currentPlaybackTrackInfo = null; 
-    releaseAudioFocus();
-    Log.w ("AMP", "Playback completed: " + currentPlaybackUri);
-    if (playlist.size() > 0)
-      {
-      playNextInPlaylist();
-      }
-    }
-
-
-  public void getAudioFocus()
-    {
-    AudioManager am = (AudioManager) context.getSystemService
-      (Context.AUDIO_SERVICE);
-    am.requestAudioFocus(this, AudioManager.STREAM_MUSIC, 
-      AudioManager.AUDIOFOCUS_GAIN);
-    am.registerMediaButtonEventReceiver (new ComponentName 
-      (context.getPackageName(), RemoteControlReceiver.class.getName()));
-    }
-
-
-  public void releaseAudioFocus()
-    {
-    AudioManager am = (AudioManager) context.getSystemService
-      (Context.AUDIO_SERVICE);
-    am.abandonAudioFocus (this);
-    am.unregisterMediaButtonEventReceiver (new ComponentName 
-      (context.getPackageName(), RemoteControlReceiver.class.getName()));
-    }
-
-
-  @Override
-  public void onAudioFocusChange (int focusChange)
-    {
-    }
 
   /** Stop the Android audio player before shutting down. */
   @Override

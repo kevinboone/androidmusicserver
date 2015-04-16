@@ -242,12 +242,77 @@ function volume_up()
 
 
 /*
+  enable_eq() invoked by a link on the HTML page or this file
+*/
+function enable_eq()
+  {
+  make_command_request ("enable_eq", response_callback_gen_status);
+  }
+
+/*
+  disable_eq() invoked by a link on the HTML page or this file
+*/
+function disable_eq()
+  {
+  make_command_request ("disable_eq", response_callback_gen_status);
+  }
+
+/*
+  enable_bass_boost() invoked by a link on the HTML page or this file
+*/
+function enable_bass_boost()
+  {
+  make_command_request ("enable_bass_boost", response_callback_gen_status);
+  }
+
+
+/*
+  disable_bass_boost() invoked by a link on the HTML page or this file
+*/
+function disable_bass_boost()
+  {
+  make_command_request ("disable_bass_boost", response_callback_gen_status);
+  }
+
+
+/*
   volume_down() invoked by a link on the HTML page
 */
 function volume_down()
   {
   make_command_request ("volume_down", response_callback_gen_status);
   }
+
+
+/*
+  set_eq_level () invoked by a link on the HTML page or this page
+*/
+function set_eq_level(band, level)
+  {
+  make_command_request ("set_eq_level " + band + "," + level, 
+     response_callback_gen_status);
+  }
+
+
+/*
+  set_bb_level () invoked by a link on the HTML page or this page
+*/
+function set_bb_level(level)
+  {
+  make_command_request ("set_bb_level " + level, 
+     response_callback_gen_status);
+  }
+
+
+/*
+  set_vol_level () invoked by a link on the HTML page or this page
+*/
+function set_vol_level(level)
+  {
+  make_command_request ("set_vol_level " + level, 
+     response_callback_gen_status);
+  }
+
 
 
 function make_command_request (cmd, callback)
@@ -371,4 +436,58 @@ function msectominsec (msec)
   if (sec < 10) ssec = "0" + ssec;
   return "" + smin + ":" + ssec; 
   }
+
+/*
+  Called when EQ is enabled or disabled on the gui_eq page
+*/
+function onClickEqEnabled (cb)
+  {
+  if (cb.checked)
+    enable_eq ();
+  else
+    disable_eq ();
+  }
+ 
+
+/*
+  Called when bass boost is enabled or disabled on the gui_eq page
+*/
+function onClickBBEnabled (cb)
+  {
+  if (cb.checked)
+    enable_bass_boost ();
+  else
+    disable_bass_boost ();
+  }
+ 
+
+/*
+  Called when an EQ slider is moved
+*/
+function onChangeEqSlider (band, value)
+  {
+  set_eq_level (band, value);
+  }
+
+
+/*
+  Called when the BB slider is moved
+*/
+function onChangeBBSlider (value)
+  {
+  set_bb_level (value);
+  }
+
+
+/*
+  Called when the Volume slider is moved
+*/
+function onChangeVolSlider (value)
+  {
+  set_vol_level (value);
+  }
+
+
+
+
 

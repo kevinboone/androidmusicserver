@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
     <application android:label="@string/app_name" android:icon="@drawable/ic_launcher">
         <activity android:name="Main"
                   android:label="@string/app_name">
@@ -16,7 +17,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-      <receiver android:name=".RemoteControlReceiver">
+      <receiver 
+       android:name="net.kevinboone.androidmusicplayer.RemoteControlReceiver">
         <intent-filter>
           <action android:name="android.intent.action.MEDIA_BUTTON" />
         </intent-filter>

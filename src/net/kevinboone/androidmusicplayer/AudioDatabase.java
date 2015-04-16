@@ -4,7 +4,7 @@
  *  Distributed under the terms of the GNU Public Licence, version 2.0
  */
 
-package net.kevinboone.androidmediaserver;
+package net.kevinboone.androidmusicplayer;
 import java.util.*;
 import java.io.*;
 import java.net.*;
@@ -16,6 +16,7 @@ import android.content.*;
 import android.database.*;
 import android.net.Uri;
 import android.provider.MediaStore;
+import net.kevinboone.textutils.*;
 
 /** This class integrates the music server with the Android built-in
     media scanner. */
@@ -242,7 +243,7 @@ public class AudioDatabase
         }
       else
         {
-        String filename = WebServer.DOCROOT + "/" + uri;
+        String filename = uri;
         mmr.setDataSource (filename);
         }
 
@@ -256,6 +257,12 @@ public class AudioDatabase
         ti.genre = mmr.extractMetadata (mmr.METADATA_KEY_GENRE);
       else
         ti.genre = "";
+      if (ti.trackNumber == null || ti.trackNumber == "")
+        ti.trackNumber = "1";
+      if (ti.title == null) ti.title = "?";
+      if (ti.artist == null) ti.artist = "?";
+      if (ti.composer == null) ti.composer = "?";
+      if (ti.album == null) ti.album = "?";
       return ti;
       }
     catch (Throwable e)
@@ -284,7 +291,7 @@ public class AudioDatabase
         }
       else
         {
-        String filename = WebServer.DOCROOT + "/" + uri;
+        String filename = uri;
         mmr.setDataSource (filename);
         }
 

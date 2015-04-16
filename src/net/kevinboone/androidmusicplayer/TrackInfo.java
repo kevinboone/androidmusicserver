@@ -4,7 +4,7 @@
  *  Distributed under the terms of the GNU Public Licence, version 2.0
  */
 
-package net.kevinboone.androidmediaserver;
+package net.kevinboone.androidmusicplayer;
 
 /** A simple data structure for audio track information. */
 public class TrackInfo

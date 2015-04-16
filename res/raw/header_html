@@ -17,6 +17,9 @@
       <a href="javascript:random_album()">Random</a>
     </td>
     <td valign="top">
+      <a href="/gui_eq">EQ</a>
+    </td>
+    <td valign="top">
       <a href="javascript:volume_up()">
         <img src="/~~vol_up_png"/>
       </a>

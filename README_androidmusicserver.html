@@ -10,7 +10,7 @@ Version 0.0.3.
 <h2>What is this?</h2>
 
 
-<img src="androidmusicserverscreenshot.png" alt="screenshot" width="400" align="left" style="margin-right:30px"/>
+<img src="androidmusicserverscreenshot.png" alt="screenshot" width="400" align="left" style="margin-right:30px; margin-bottom:30px"/>
 
 Kevin's Music Server for Android provides a web browser interface to
 control playback of audio files stored on relatively modern (4.x) 
@@ -25,6 +25,17 @@ directly from the filesystem. You can restrict the album listing to particular
 genres or particular artists rather than displaying all 
 albums on the same page. Album cover
 art images can be displayed (but see notes below about this.)
+<p/>
+<br clear="all"/>
+<b>Features</b><p/>
+<ul>
+<li>Simple web interface -- works on most desktop web browsers and many mobile browsers </li>
+<li>Integrates with the Android media catalogue</li>
+<li>Supports file/folder browsing</li>
+<li>Equalizer</li>
+<li>Cover art (both baked-in and folder images)</li>
+<li>Playback control by headset or remote control</li>
+</ul>
 
 <br clear="all"/>
 <h2>Installation</h2>
@@ -86,7 +97,9 @@ collections of audio files, that are relatively tidily organized.
 All lists (of albums, artists, etc) are displayed on a single,
 possibly long page. In practice it seems to work reasonably well
 with collections of a few hundred albums, but the user interface
-will struggle with thousands of albums. In general it assumes
+will struggle with thousands of albums. 
+<p/>
+In general this app assumes
 (as Android generally does) that audio tracks are organized into
 albums, and that at least the album, title, and artist tags are
 filled in. To play an album in the right order it also assumes that
@@ -94,7 +107,11 @@ the track number tag is filled in, or that the titles when arranged
 into alphabetical order will give the same ordering as the original
 album. Everything about this application will work somewhat better
 if files are thoroughly and consistently tagged -- but that's true
-of most music players.
+of most music players. I'm told that "free music downloaders"
+(bootlegging utilities, in other words) do not fill in tags properly,
+and you can end up with two thousand tracks in the same album, all
+called "null". If you sup with the Devil, as the saying goes,
+use a long spoon.
 <p/>
 The web interface is completely stateless; that is, everything it
 needs to know is captured in the URL supplied by the browser. So
@@ -133,7 +150,9 @@ of the selected track finishes, if there is anything left to play in
 the playlist.
 <p/>
 You can control the volume of playback by clicking on the loudspeaker
-buttons in the menu bar at the top of each page. 
+buttons in the menu bar at the top of each page, or by going to the
+"Equalizer, etc" page from the home page, and tweaking the volume
+slider.  
 If you're using a headset, that might
 have its own volume control and, if it does, it probably sets the
 volume on the headset itself, not on the device. So, in that case, 
@@ -231,6 +250,16 @@ also be transparent to the user except that, of course, whilst unloaded
 the service will not respond to HTTP requests. However, if the service
 is unloaded and reloading in this way, it will reinitialize, and 
 the current playlist will be lost.
+<p/>
+The Android API specifies an interface by which app can control audio equalizer
+settings, but manufacturers do not have to implement it in any useful way.
+That is, the controls may not be connected to anything. "Bass boost" is
+particularly flakey -- on some devices it has an adjustable strength, 
+on some it is just an on/off control, and on some it has no effect at all.
+Devices that provide their own, vendor-specific audio enhancers frequently
+do not implement the Android audio API at all.
+In any event, I am aware of few Android devices where the stock equalizer really
+works well. 
 
 <h2>Cover art</h2>
 
@@ -370,6 +399,17 @@ for the rescan, and rescanning the filesystem does not imply rescanning
 the media catalogue (because we have no way to know when the filesystem
 rescan is finished, if it even started.) 
  
+<h2>Supported devices</h2>
+
+Android Music Server is known to work on at least the following 
+devices. Feel free to report others that work or don't work.
+
+<ul>
+<li>Google Nexus 7 second gen., with Android 4.4.4</li>
+<li>Google Nexus 7 first gen., with Android 5.1.0</li>
+<li>Samsung Galaxy S3, with Android 4.4.2</li>
+<li>Samsung Note 3, with Android 4.4.2</li>
+</ul>
 
 <h2>Legal and copying</h2>
 
@@ -400,7 +440,7 @@ might not. If it doesn't, you're very welcome to fix it.
       April 15 2015 
     </td>
     <td valign="top">
-      Added on-device status display and controls. 
+      Added on-device status display and controls, and equalizer page 
     </td>
   </tr>
   <tr>
