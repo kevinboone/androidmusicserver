@@ -488,6 +488,20 @@ function onChangeVolSlider (value)
   }
 
 
+/* We have to go to prodigious lengths to get a delay in JS.
+   In this case, we need to interpose a delay between executing a 
+   command on the server, and having the page refresh itself. */
+function refresh()
+  {
+  window.location.reload(true);
+  }
+
+
+function delay_and_refresh()
+  {
+  setTimeout ("refresh()", 300);
+  }
+
 
 
 
