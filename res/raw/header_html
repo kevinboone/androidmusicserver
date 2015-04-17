@@ -70,17 +70,17 @@
           </tr>
           <tr>
             <td valign="top">
-              <spand id="transport_title"></span>
+              <span id="transport_title"></span>
             </td>
           </tr>
           <tr>
             <td valign="top">
-              <spand id="transport_album"></span>
+              <span id="transport_album"></span>
             </td>
           </tr>
           <tr>
             <td valign="top">
-              <spand id="transport_artist"></span>
+              <span id="transport_artist"></span>
             </td>
           </tr>
         </table>

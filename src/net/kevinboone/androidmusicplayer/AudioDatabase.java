@@ -32,6 +32,8 @@ public class AudioDatabase
   protected TreeSet<String> genres = new TreeSet<String>();
   MediaMetadataRetriever mmr = new MediaMetadataRetriever();
 
+  protected int approxNumTracks = 0;
+
   /**
    Scan for albums, etc., in the Android media database. Note that this
    method does not cause Android to rescan its filesystem.
@@ -43,6 +45,7 @@ public class AudioDatabase
     artists = new TreeSet<String>(); // Clear any old entries
     composers = new TreeSet<String>(); // Clear any old entries
     Uri uri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+    approxNumTracks = 0;
     Cursor cur = context.getContentResolver().query(uri, null,
       MediaStore.Audio.Media.IS_MUSIC + " = 1", null, null);
     if (cur.moveToFirst()) 
@@ -66,6 +69,7 @@ public class AudioDatabase
         String artist = cur.getString (artistColumn);
         if (artist != null && artist.length() > 0)
          artists.add (artist);
+        approxNumTracks++;
         } while (cur.moveToNext());
       cur.close();
 
@@ -147,6 +151,37 @@ public class AudioDatabase
 
     return results;
     }
+
+
+  public Set<String> getAlbumsByComposer (Context context, String composer)
+    {
+    Set<String> results = new TreeSet<String>();
+
+    Uri uri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+    Cursor cur = context.getContentResolver().query(uri, null,
+      MediaStore.Audio.Media.IS_MUSIC + " = 1", null, null);
+    if (cur.moveToFirst()) 
+      {
+      int composerColumn = cur.getColumnIndex(MediaStore.Audio.Media.COMPOSER);
+      int albumColumn = cur.getColumnIndex(MediaStore.Audio.Media.ALBUM);
+
+      do 
+        {
+        String candComposer = cur.getString (composerColumn);
+        if (candComposer != null && candComposer.length() > 0 
+            && candComposer.equalsIgnoreCase (composer))
+          {
+          String album = cur.getString (albumColumn);
+          if (album != null && album.length() > 0)
+            results.add (album);
+          }
+        } while (cur.moveToNext());
+      }
+    cur.close();
+
+    return results;
+    }
+
 
   public Set<String> getAlbumsByGenre (Context context, String genre)
     {
@@ -319,6 +354,55 @@ public String getFilePathFromContentUri (Context context, Uri uri)
     filePath = cursor.getString(columnIndex);
     cursor.close();
     return filePath;
+    }
+
+
+public List<String> findTracks (Context context, String search,
+      int start, int num)
+   {
+   List<String> results = new ArrayList<String>();
+   Uri uri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+   Cursor cur = context.getContentResolver().query(uri, null,
+      MediaStore.Audio.Media.IS_MUSIC + " = 1", null, 
+      MediaStore.Audio.Media.TITLE + "," + MediaStore.Audio.Media.TRACK);
+   int artistColumn = cur.getColumnIndex(MediaStore.Audio.Media.ARTIST);
+   int albumColumn = cur.getColumnIndex(MediaStore.Audio.Media.ALBUM);
+   int composerColumn = cur.getColumnIndex(MediaStore.Audio.Media.COMPOSER);
+   int idColumn = cur.getColumnIndex(MediaStore.Audio.Media._ID);
+   int count = 0;
+
+   if (cur.moveToFirst()) 
+     {
+     do 
+       {
+       long id = cur.getLong (idColumn);
+       Uri extUri = ContentUris.withAppendedId 
+          (android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
+        /*
+        String album = cur.getString (albumColumn);
+        if (album != null && album.length() > 0)
+         albums.add (album);
+        String composer = cur.getString (composerColumn);
+        if (composer != null && composer.length() > 0)
+         composers.add (composer);
+        String artist = cur.getString (artistColumn);
+        if (artist != null && artist.length() > 0)
+         artists.add (artist);
+        */
+        count++;
+        if (count >= start)
+          results.add (extUri.toString());
+        } while (cur.moveToNext() && (num < 0 || results.size() <= num));
+ 
+     cur.close();
+     }
+   return results;
+   }
+
+
+  public int getApproxNumTracks ()
+    {
+    return approxNumTracks;
     }
 
 }

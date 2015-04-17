@@ -26,8 +26,8 @@ private String currentPlaybackUri = null; //File
 private TrackInfo currentPlaybackTrackInfo = null;
 protected List<TrackInfo> playlist = new Vector<TrackInfo>();
 protected int currentPlaylistIndex = -1;
-private Equalizer eq = new Equalizer (0, mediaPlayer.getAudioSessionId());
-private BassBoost bb = new BassBoost (0, mediaPlayer.getAudioSessionId());
+private Equalizer eq = null;
+private BassBoost bb = null; 
 public static final int MAX_EQ_BANDS = 10;
 protected AudioDatabase audioDatabase = null;
 private Context context;
@@ -40,6 +40,19 @@ private Context context;
     audioDatabase = new AudioDatabase();
     RemoteControlReceiver.setPlayer (this);
     audioDatabase.scan (context);
+    try
+      {
+      // I'm told that these constructors can fail. If they do,
+      //  leave them as null. Other things will fail later, but
+      //  at least the service will start up, and some things
+      //  might still work
+      eq = new Equalizer (0, mediaPlayer.getAudioSessionId());
+      bb = new BassBoost (0, mediaPlayer.getAudioSessionId());
+      }
+    catch (Throwable e)
+      {
+      Log.w ("AMS", "Can't initialize effects: " + e.toString());
+      }
     }
 
   public void stop()
@@ -462,6 +475,12 @@ private Context context;
     }
 
 
+  public Set<String> getComposers()
+    {
+    return audioDatabase.getComposers();
+    }
+
+
    public byte[] getEmbeddedPictureForTrackUri (String uri)
     {
     return audioDatabase.getEmbeddedPicture (context, uri);
@@ -483,6 +502,12 @@ private Context context;
   public Set<String> getAlbumsByArtist (String artist)
     {
     return audioDatabase.getAlbumsByArtist (context, artist);
+    }
+
+
+  public Set<String> getAlbumsByComposer (String artist)
+    {
+    return audioDatabase.getAlbumsByComposer (context, artist);
     }
 
 
@@ -513,6 +538,16 @@ private Context context;
     return false;
     }
 
+  public List<String> findTracks (String search, int start, int num)
+    {
+    return audioDatabase.findTracks (context, search, start, num);
+    }
+
+  
+  public int getApproxNumTracks ()
+    {
+    return audioDatabase.getApproxNumTracks();
+    }
 
 }
 

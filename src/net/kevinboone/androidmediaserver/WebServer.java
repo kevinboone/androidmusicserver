@@ -25,6 +25,7 @@ import net.kevinboone.textutils.*;
 public class WebServer extends NanoHTTPD 
 {
 protected static String DOCROOT="/";
+protected static int TRACKS_PER_PAGE = 30;
 private Context context = null;
 private String lastModifiedString = null; 
 private Date lastModifiedDate = null; 
@@ -121,6 +122,10 @@ public WebServer (Context context)
         return handleGuiAlbumsByGenre (parameters);
       if (uri.indexOf ("/gui_albums_by_genre") == 0)
         return handleGuiAlbumsByGenre (parameters);
+      if (uri.indexOf ("gui_albums_by_composer") == 0)
+        return handleGuiAlbumsByComposer (parameters);
+      if (uri.indexOf ("/gui_albums_by_composer") == 0)
+        return handleGuiAlbumsByComposer (parameters);
       if (uri.indexOf ("gui_albums_by_artist") == 0)
         return handleGuiAlbumsByArtist (parameters);
       if (uri.indexOf ("/gui_albums_by_artist") == 0)
@@ -141,6 +146,14 @@ public WebServer (Context context)
         return handleGuiGenres (parameters);
       if (uri.indexOf ("/gui_genres") == 0)
         return handleGuiGenres (parameters);
+      if (uri.indexOf ("gui_tracks") == 0)
+        return handleGuiTracks (parameters);
+      if (uri.indexOf ("/gui_tracks") == 0)
+        return handleGuiTracks (parameters);
+      if (uri.indexOf ("gui_composers") == 0)
+        return handleGuiComposers (parameters);
+      if (uri.indexOf ("/gui_composers") == 0)
+        return handleGuiComposers (parameters);
       if (uri.indexOf ("gui_artists") == 0)
         return handleGuiArtists (parameters);
       if (uri.indexOf ("/gui_artists") == 0)
@@ -287,6 +300,36 @@ public WebServer (Context context)
     }
 
   
+  /**
+    Formats a list of composers, maintained by MediaDatabase
+  */
+  String makeComposerList (Map<String,String> parameters, boolean covers)
+    {
+    StringBuffer sb = new StringBuffer();
+    sb.append ("<span class=\"pagetitle\">" + "Composers" + "</span><p/>");
+    sb.append ("<table>");
+
+    Set<String> composers = player.getComposers();
+    for (String composer: composers)
+      {
+      sb.append ("<tr>");
+      sb.append ("<td valign=\"top\">");
+// Nothing in the image slot yet
+      sb.append ("</td>");
+      sb.append ("<td valign=\"top\">");
+      sb.append (" <a href=\"/gui_albums_by_composer?composer=" 
+              + URLEncoder.encode (composer) + "&" + 
+                makeGenParams (parameters) + 
+                "\"><span>" + composer + "</span></a> ");
+      sb.append ("</td>");
+      sb.append ("</tr>");
+      }
+    sb.append ("</table>\n");
+    return new String (sb);
+    }
+
+  
+  
   
   
   /**
@@ -353,6 +396,24 @@ public WebServer (Context context)
      + artist + "'</span><p/>");
 
     Set<String> albums = player.getAlbumsByArtist (artist);
+    sb.append (makeAlbumListFromSet (parameters, covers, albums));
+
+    return new String (sb);
+    }
+
+
+  /**
+    Format a list of albums matching the specified composer.
+  */
+  String makeAlbumsByComposer (Map<String,String> parameters, 
+      String composer, boolean covers)
+    {
+    StringBuffer sb = new StringBuffer();
+
+    sb.append ("<span class=\"pagetitle\">Albums including composer '" 
+     + composer + "'</span><p/>");
+
+    Set<String> albums = player.getAlbumsByComposer (composer);
     sb.append (makeAlbumListFromSet (parameters, covers, albums));
 
     return new String (sb);
@@ -948,6 +1009,28 @@ public WebServer (Context context)
     }
 
 
+  /**
+    Make the album-list-by-composer page for the "composer" 
+    specified in the request.
+  */
+  protected Response handleGuiAlbumsByComposer (Map<String,String> parameters)
+    {
+    String composer = parameters.get("composer");
+    if (composer == null)
+      composer = ""; // Prevent a crash
+
+    boolean covers = false;
+    if ("true".equals (parameters.get("covers")))
+      covers = true;
+
+    String answer = makeHtmlHeader();
+    answer += makeAlbumsByComposer (parameters, composer, covers);
+    answer += makeControls(parameters);
+    answer += makeHtmlFooter();
+    return new NanoHTTPD.Response (answer);
+    }
+
+
 
   /**
     Make the file list page for the "path" specified in the request
@@ -980,6 +1063,27 @@ public WebServer (Context context)
     answer += makeHtmlFooter();
     return new NanoHTTPD.Response (answer);
     }
+
+
+  /**
+    Make the track list page. 
+  */
+  protected Response handleGuiTracks (Map<String,String> parameters)
+    {
+    boolean covers = false;
+    if ("true".equals (parameters.get("covers")))
+      covers = true;
+    int start = 0;
+    String sStart = parameters.get("start");
+    if (sStart != null && sStart.length() > 0)
+      start = Integer.parseInt (sStart);
+    String answer = makeHtmlHeader();
+    answer += makeTrackList (parameters, covers, start, null); //TOD search 
+    answer += makeControls(parameters);
+    answer += makeHtmlFooter();
+    return new NanoHTTPD.Response (answer);
+    }
+
 
   protected Response handleGuiEq (Map<String,String> parameters)
     {
@@ -1018,6 +1122,102 @@ public WebServer (Context context)
     answer += makeControls(parameters);
     answer += makeHtmlFooter();
     return new NanoHTTPD.Response (answer);
+    }
+
+
+  /**
+    Make the composer list page. 
+  */
+  protected Response handleGuiComposers (Map<String,String> parameters)
+    {
+    boolean covers = false;
+    if ("true".equals (parameters.get("covers")))
+      covers = true;
+    String answer = makeHtmlHeader();
+    answer += makeComposerList (parameters, covers); 
+    answer += makeControls(parameters);
+    answer += makeHtmlFooter();
+    return new NanoHTTPD.Response (answer);
+    }
+
+
+  protected String makeTrackList (Map<String, String> parameters, 
+      boolean covers, int start, String search)
+    {
+    // TODO add search
+    StringBuffer sb = new StringBuffer();
+
+    sb.append 
+     ("<span class=\"pagesubtitle\">Tracks</span><br/>");
+    sb.append ("<p/>\n");
+
+    if (start != 0)
+      {
+      String prevUrl = "/gui_tracks?start=" + "0" 
+       + "&" + makeGenParams (parameters);
+      sb.append ("<a href=\"" + prevUrl 
+       + "\"><span class=\"textbuttonspan\">First</span> </a>");
+      }    
+
+    if (start >= TRACKS_PER_PAGE)
+      {
+      String prevUrl = "/gui_tracks?start=" + (start - TRACKS_PER_PAGE) 
+       + "&" + makeGenParams (parameters);
+      sb.append ("<a href=\"" + prevUrl 
+       + "\"><span class=\"textbuttonspan\">Previous</span> </a>");
+      }    
+
+    int approxNumTracks = player.getApproxNumTracks();
+    List<String> trackUris = player.findTracks (null, start, TRACKS_PER_PAGE);
+    if (trackUris.size() == 0)
+      {
+      sb.append ("<p/>No more tracks<p/>");
+      }
+    else
+      {
+      String nextUrl = "/gui_tracks?start=" + (start + TRACKS_PER_PAGE) 
+       + "&" + makeGenParams (parameters);
+      sb.append ("<a href=\"" + nextUrl + 
+       "\"><span class=\"textbuttonspan\">Next</span></a>");
+      sb.append ("<p/>\n");
+
+      int lastTrackNum = start + 1 + trackUris.size();
+      if (lastTrackNum > approxNumTracks) lastTrackNum = approxNumTracks;
+
+      sb.append ("<i>Tracks " + (start + 1) + "-" + lastTrackNum 
+         + " of " 
+          + approxNumTracks + "</i><p/>\n");
+
+      for (String trackUri : trackUris)
+        {
+        TrackInfo ti = player.getTrackInfo (trackUri);
+        sb.append ("<table callspacing=\"0\" cellpadding=\"5\">");
+        sb.append ("<tr>");
+        sb.append ("<td valign=\"top\">");
+        if (covers)
+          sb.append ("<img width=\"64\" src=\"/cover?album=" 
+           + URLEncoder.encode (ti.album) + "\"/>"); 
+        sb.append ("</td>");
+        sb.append ("<td valign=\"top\">");
+        sb.append (" <a href=\"javascript:play_file_now('" 
+              + EscapeUtils.escapeJSON (trackUri) + 
+                "')\"><span class=\"textbuttonspan\">Play now</span></a> ");
+        sb.append (" <a href=\"javascript:add_to_playlist('" 
+              + EscapeUtils.escapeJSON (trackUri) + 
+                "')\"><span class=\"textbuttonspan\">Add</span></a> ");
+        sb.append ("<br/>");
+        sb.append (ti.title);
+        sb.append ("<br/>");
+        sb.append (ti.album);
+        sb.append (" | ");
+        sb.append (ti.artist);
+        sb.append ("</td>");
+        sb.append ("</tr>");
+        sb.append ("</table>\n");
+        }
+      }
+
+    return new String (sb);
     }
 
 
@@ -1121,17 +1321,21 @@ public WebServer (Context context)
     StringBuffer sb = new StringBuffer();
 
     sb.append 
-     ("<span class=\"pagesubtitle\">Browse albums with covers</span><br/>");
+     ("<span class=\"pagesubtitle\">Browse with covers</span><br/>");
     sb.append ("&nbsp;&nbsp;<a href=\"/gui_albums?covers=true\">Browse all albums</a><br/>");
     sb.append ("&nbsp;&nbsp;<a href=\"/gui_genres?covers=true\">Browse albums by genre</a><br/>");
     sb.append ("&nbsp;&nbsp;<a href=\"/gui_artists?covers=true\">Browse albums by artist</a><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"/gui_composers?covers=true\">Browse albums by composer</a><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"/gui_tracks?covers=true\">Browse tracks</a><br/>");
     sb.append ("<p/>");
 
     sb.append 
-     ("<span class=\"pagesubtitle\">Browse albums without covers</span><br/>");
+     ("<span class=\"pagesubtitle\">Browse without covers</span><br/>");
     sb.append ("&nbsp;&nbsp;<a href=\"/gui_albums?covers=false\">Browse all albums</a><br/>");
     sb.append ("&nbsp;&nbsp;<a href=\"/gui_genres?covers=false\">Browse albums by genre</a><br/>");
     sb.append ("&nbsp;&nbsp;<a href=\"/gui_artists?covers=false\">Browse albums by artist</a><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"/gui_composers?covers=false\">Browse albums by composer</a><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"/gui_tracks?covers=false\">Browse tracks</a><br/>");
     sb.append ("<p/>");
 
     sb.append 
@@ -1275,6 +1479,7 @@ public WebServer (Context context)
     return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
       makeJSONStatusResponse (0));
     }
+
 
   NanoHTTPD.Response setVolLevel (int level)
     {
@@ -1424,6 +1629,7 @@ public WebServer (Context context)
         }
       }
 
+
     playAlbumNow (album);
     return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
         makeJSONStatusResponse 
@@ -1439,6 +1645,7 @@ public WebServer (Context context)
             makeJSONStatusResponse (0));
     }
 
+
   /** Enable bass boost. */
   NanoHTTPD.Response enableBassBoost()
     {
@@ -1446,6 +1653,7 @@ public WebServer (Context context)
     return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
       makeJSONStatusResponse (0, "Bass boost enabled"));
     }
+
 
   /** Disable bass boost. */
   NanoHTTPD.Response disableBassBoost()
@@ -1455,6 +1663,7 @@ public WebServer (Context context)
       makeJSONStatusResponse (0, "Bass boost disabled"));
     }
 
+
   /** Enable EQ. */
   NanoHTTPD.Response enableEq()
     {
@@ -1463,6 +1672,7 @@ public WebServer (Context context)
       makeJSONStatusResponse (0, "EQ enabled"));
     }
 
+
   /** Disable EQ. */
   NanoHTTPD.Response disableEq()
     {
@@ -1470,6 +1680,7 @@ public WebServer (Context context)
     return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
       makeJSONStatusResponse (0, "EQ disabled"));
     }
+
 
   /** Volume up. */
   NanoHTTPD.Response volumeUp()
@@ -1483,6 +1694,7 @@ public WebServer (Context context)
          (0));
     }
 
+
   /** Volume dow */
   NanoHTTPD.Response volumeDown()
     {
@@ -1495,6 +1707,7 @@ public WebServer (Context context)
          (0));
     }
 
+
   /** Rescan the Android media catalog */
   NanoHTTPD.Response rescanCatalog ()
     {
@@ -1503,6 +1716,7 @@ public WebServer (Context context)
         makeJSONStatusResponse 
          (0, "Rescan complete"));
     }
+
 
   /** Rescan the whole filesystem */
   NanoHTTPD.Response rescanFilesystem ()
@@ -1517,7 +1731,8 @@ public WebServer (Context context)
     }
 
 
-  /** Stop the Android audio player before shutting down. */
+  /** Stop the Android audio player before shutting down. Overrides
+ *    stop() in Activity. */
   @Override
   public void stop()
     {
