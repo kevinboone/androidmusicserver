@@ -5,7 +5,7 @@
 
 <h1>Kevin's Music Server for Android </h1>
 
-Version 0.0.3.
+Version 0.0.4.
 
 <h2>What is this?</h2>
 
@@ -29,9 +29,12 @@ art images can be displayed (but see notes below about this.)
 <br clear="all"/>
 <b>Features</b><p/>
 <ul>
-<li>Simple web interface -- works on most desktop web browsers and many mobile browsers </li>
-<li>Integrates with the Android media catalogue -- browse by album, artist, genre, composer, or track</li>
+<li>Simple web interface -- works on most desktop web browsers 
+and many mobile browsers </li>
+<li>Integrates with the Android media catalogue -- browse by album, 
+artist, genre, composer, or track</li>
 <li>Supports file/folder browsing</li>
+<li>Media catalogue text search</li>
 <li>Equalizer</li>
 <li>Cover art (both baked-in and album-folder images)</li>
 <li>Playback control by headset or remote control</li>
@@ -60,7 +63,9 @@ Downloads section), or from <a href="https://github.com/kevinboone/androidmusics
 This app is designed to run quietly in the background, so it 
 has no substantive Android user interface. When you start it,
 if all is well you'll see the URL to which you should point your web browser.
-If there are problems, which will generally be WIFI-related, you'll
+The Web server listens on port 30000 by default, but this can be
+changed from the settings page.
+If there are problems, which will generally be network-related, you'll
 see an error message. The app displays some information about the audio
 track that is currently playing, if there is one, and provides some
 buttons to control playback, in a rudimentary way. The "Shutdown" button
@@ -172,94 +177,6 @@ This can be useful for preventing ringtones and the like from appearing
 in the album list; but bear in mind that this trick affects all apps
 that use the media scanner.
 
-<h2>Limitations</h2>
-
-The are particular issues regarding the display of cover art: please
-see the section "Cover art" below.
-<p/>
-Some Android devices are factory-configured to prevent <i>any</i>
-incoming network connection. Sorry but, without rooting the device,
-there's no way to change that, and this app simply won't work.
-Similarly, if your Android implementation shuts down the WiFi radio
-to save power when the screen blanks then, again, this app won't work.
-<p/>
-Android Media Server relies heavily on JavaScript to create and manage its
-web user interface. Your browser needs decent JavaScript support --
-the browser on the android device itself might not be up to the job
-(but Chrome, at least, seems to work pretty well.) 
-<p/>
-Only WIFI operation is supported -- you won't be able to connect to the
-app over a mobile network. Even if the app allowed this, most likely
-the service would not.
-<p/>
-The app will not respond very well to changes in WIFI status -- if you
-change access points, for example -- and you'll probably need to restart
-it in such cases.
-<p/>
-Android Music Server relies for its tag (e.g., album) 
-support entirely on the Android
-media scanner. If this isn't working (which is relatively common), 
-results will be variable. The app queries the media scanner
-when it starts, so media added after starting may not be visible (even
-if the scanner is working), unless you click the "Rescan media catalogue"
-link in the home page. Please see the section 'Android media 
-catalogue issues' for more information. 
-<p/>
-One particular oddity of the Android media scanner is that it will sometimes 
-present video files as 'Music,' presmumably because they have soundtracks.
-This app doesn't play video, so these entries in the album list are an
-irritation.
-<p/>
-Whilst you can skip forward and back between tracks in the playlist,
-there is no general foward/rewind facility within a specific
-track. This is a tricky thing to implement within a web interface.
-<p/>
-At present, the app listens on port 30000, and that can't be changed.
-<p/>
-There is quite a subtle limitation inherent in the way 
-Android audio works. Android Music Server registers itself to receive
-remote control events (e.g., from a headset), but <i>only when audio
-is playing</i>. So you can select play/pause, next track, and previous 
-track, if your headset has buttons for these functions. However,
-if you do a "stop" operation (if your hardware supports it), you
-won't be able to start again, or use remote control at all,
-until you resume playback using the web interface. The reason this limitation
-exists is that the app is designed to run in the background, and perhaps
-be idle a lot of the time. If it took over the remote control when it 
-was running, it would prevent other media apps using the remote control.
-There are, in fact, a number of popular media players that suffer from
-this exact problem, and it can be quite a nuisance.
-<p/>
-This application is, in essence, an unsecured web server. It does allow
-people on the same WIFI network to browse the contents of the device's
-storage -- at least those parts of it that contain audio. The application
-is not really intended for use in hostile environments. 
-<p/>
-The user interface is currently English-language only.
-<p/>
-The part of Android Music Server that responds to HTTP requests and plays
-audio (i.e., most of it) is implemented as an Android background service.
-It is therefore less prone to automatic unloading than the user interface
-is. It's possible that Android might unload the user interface, whilst
-leaving the service running. This should be harmless, because when you
-restart the app, Android will not restart the service if it is still
-running. It's possible, in conditions of low memory, that Android will
-unload the service as well. In that case, Android is supposed to reload
-it when conditions improve, without user intervention. That process should
-also be transparent to the user except that, of course, whilst unloaded
-the service will not respond to HTTP requests. However, if the service
-is unloaded and reloading in this way, it will reinitialize, and 
-the current playlist will be lost.
-<p/>
-The Android API specifies an interface by which app can control audio equalizer
-settings, but manufacturers do not have to implement it in any useful way.
-That is, the controls may not be connected to anything. "Bass boost" is
-particularly flakey -- on some devices it has an adjustable strength, 
-on some it is just an on/off control, and on some it has no effect at all.
-Devices that provide their own, vendor-specific audio enhancers frequently
-do not implement the Android audio API at all.
-In any event, I am aware of few Android devices where the stock equalizer really
-works well. 
 
 <h2>Cover art</h2>
 
@@ -363,6 +280,32 @@ Shuffling only changes the order in which items appear in the playlist --
 if something is playing when you shuffle, the change in ordering will
 only be apparent when that track is finished.
 
+
+<h2>Settings</h2>
+
+The settings page provides some modest control over operation of
+the app -- the number of items displayed on each browser page, for
+example. There is no easy way to guess the appropriate settings --
+they depend on the capabilities of the Android device and of
+the web browser in use. If you are primarily interacting with the
+music server through a desktop browser, for example, you'll probably
+be able to set higher values of the number of items on each pag.
+<p/>
+As with most Android settings pages, the changed settings take effect
+when you click the "back" button to get back to the main screen.
+
+
+<h2>Search</h2>
+
+There is a search box in the top menu bar. The music server does
+a very simple, case-insensitive search for the text string, 
+which may appear anywhere
+in any album, artist, composer, or track title. The number of matches 
+of each category (album, artist, etc) that are displayed on 
+the results page can be controlled using the
+Settings page.
+
+
 <h2>Android media catalogue issues</h2>
 
 Android maintains a catalogue of media files and their metadata (tags).
@@ -411,6 +354,109 @@ devices. Feel free to report others that work or don't work.
 <li>Samsung Note 3, with Android 4.4.2</li>
 </ul>
 
+<h2>Limitations</h2>
+
+The are particular issues regarding the display of cover art: please
+see the section "Cover art" above.
+<p/>
+Some Android devices are factory-configured to prevent <i>any</i>
+incoming network connection. Sorry but, without rooting the device,
+there's no way to change that, and this app simply won't work.
+Similarly, if your Android implementation shuts down the WiFi radio
+to save power when the screen blanks then, again, this app won't work.
+<p/>
+Android Music Server relies heavily on JavaScript to create and manage its
+web user interface. Your browser needs decent JavaScript support --
+the browser on the android device itself might not be up to the job
+(but Chrome, at least, seems to work pretty well.) 
+<p/>
+Only WIFI operation is supported -- you won't be able to connect to the
+app over a mobile network. Even if the app allowed this, most likely
+the service would not.
+<p/>
+The app will not respond very well to changes in WIFI status -- if you
+change access points, for example -- and you'll probably need to restart
+it in such cases.
+<p/>
+Android Music Server relies for its tag (e.g., album) 
+support entirely on the Android
+media scanner. If this isn't working (which is relatively common), 
+results will be variable. The app queries the media scanner
+when it starts, so media added after starting may not be visible (even
+if the scanner is working), unless you click the "Rescan media catalogue"
+link in the home page. Please see the section 'Android media 
+catalogue issues' for more information. 
+<p/>
+One particular oddity of the Android media scanner is that it will sometimes 
+present video files as 'Music,' presmumably because they have soundtracks.
+This app doesn't play video, so these entries in the album list are an
+irritation.
+<p/>
+Whilst you can skip forward and back between tracks in the playlist,
+there is no general foward/rewind facility within a specific
+track. This is a tricky thing to implement within a web interface.
+<p/>
+The app does not choose an open port for its built-in web server --
+this would be easy to implement, but users would probably prefer
+the port number to remain the same between sessions. If the port number
+clashes with something else, or is out of the permitted range, an
+error message should be displayed.
+<p/>
+There is quite a subtle limitation inherent in the way 
+Android audio works. Android Music Server registers itself to receive
+remote control events (e.g., from a headset), but <i>only when audio
+is playing</i>. So you can select play/pause, next track, and previous 
+track, if your headset has buttons for these functions. However,
+if you do a "stop" operation (if your hardware supports it), you
+won't be able to start again, or use remote control at all,
+until you resume playback using the web interface. The reason this limitation
+exists is that the app is designed to run in the background, and perhaps
+be idle a lot of the time. If it took over the remote control when it 
+was running, it would prevent other media apps using the remote control.
+There are, in fact, a number of popular media players that suffer from
+this exact problem, and it can be quite a nuisance.
+<p/>
+This application is, in essence, an unsecured web server. It does allow
+people on the same WIFI network to browse the contents of the device's
+storage -- at least those parts of it that contain audio. The application
+is not really intended for use in hostile environments. 
+<p/>
+The user interface is currently English-language only.
+<p/>
+The part of Android Music Server that responds to HTTP requests and plays
+audio (i.e., most of it) is implemented as an Android background service.
+It is therefore less prone to automatic unloading than the user interface
+is. It's possible that Android might unload the user interface, whilst
+leaving the service running. This should be harmless, because when you
+restart the app, Android will not restart the service if it is still
+running. It's possible, in conditions of low memory, that Android will
+unload the service as well. In that case, Android is supposed to reload
+it when conditions improve, without user intervention. That process should
+also be transparent to the user except that, of course, whilst unloaded
+the service will not respond to HTTP requests. However, if the service
+is unloaded and reloading in this way, it will reinitialize, and 
+the current playlist will be lost.
+<p/>
+The Android API specifies an interface by which app can control audio equalizer
+settings, but manufacturers do not have to implement it in any useful way.
+That is, the controls may not be connected to anything. "Bass boost" is
+particularly flakey -- on some devices it has an adjustable strength, 
+on some it is just an on/off control, and on some it has no effect at all.
+Devices that provide their own, vendor-specific audio enhancers frequently
+do not implement the Android audio API at all.
+In any event, I am aware of few Android devices where the stock equalizer really
+works well. On some devices, I'm told that the equalizer API does not even
+initialize properly. This app attempts to prevent that state of affairs 
+from stopping it even starting, but it make cause problems if the
+EQ page is requested by a browser later. 
+<p/>
+Albums and tracks that appear in the search results are displayed without
+cover art. The reason is a pragmatic one -- since the user is generally
+free to choose whether to see cover art or not, being able to
+display cover art in the search results would require two
+search boxes, or some other user interface element to make the selection.
+
+
 <h2>Legal and copying</h2>
 
 Android Music Server is open-source, and released under the terms
@@ -432,6 +478,17 @@ might not. If it doesn't, you're very welcome to fix it.
 <h2>Revision history</h2>
 
 <table cellpadding="5px">
+  <tr>
+    <td valign="top">
+      0.0.4
+    </td>
+    <td valign="top">
+      April 18 2015 
+    </td>
+    <td valign="top">
+      Added search facility, and preferences page 
+    </td>
+  </tr>
   <tr>
     <td valign="top">
       0.0.3
@@ -470,7 +527,7 @@ might not. If it doesn't, you're very welcome to fix it.
 
 <h2>Downloads</h2>
 
-<a href="androidmusicserver-0.0.3.zip">Source code</a><br/>
-<a href="androidmusicserver-0.0.3.apk">Android APK package</a><br/>
+<a href="androidmusicserver-0.0.4.zip">Source code</a><br/>
+<a href="androidmusicserver-0.0.4.apk">Android APK package</a><br/>
 
 

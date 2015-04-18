@@ -538,7 +538,7 @@ private Context context;
     return false;
     }
 
-  public List<String> findTracks (String search, int start, int num)
+  public Set<String> findTracks (SearchSpec search, int start, int num)
     {
     return audioDatabase.findTracks (context, search, start, num);
     }
@@ -547,6 +547,23 @@ private Context context;
   public int getApproxNumTracks ()
     {
     return audioDatabase.getApproxNumTracks();
+    }
+
+
+  public Set<String> getMatchingAlbums (SearchSpec ss, int max) 
+    {
+    return audioDatabase.getMatchingAlbums (ss, max);
+    }
+
+
+  public Set<String> getMatchingArtists (SearchSpec ss, int max) 
+    {
+    return audioDatabase.getMatchingArtists (ss, max);
+    }
+
+  public Set<String> getMatchingComposers (SearchSpec ss, int max) 
+    {
+    return audioDatabase.getMatchingComposers (ss, max);
     }
 
 }

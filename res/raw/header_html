@@ -10,30 +10,28 @@
 
  <table border="0" class="menutable" cellpadding="5px">
    <tr>
-    <td valign="top">
-      <a href="/gui_home">Home</a>
-    </td>
-    <td valign="top">
-      <a href="javascript:random_album()">Random</a>
-    </td>
-    <td valign="top">
+     <td valign="top" width="1px">
+       <a href="/gui_home">Home</a>
+     </td>
+     <td valign="top" width="1px">
+       <a href="javascript:random_album()">Random</a>
+     </td>
+     <td valign="top" width="1px">
       <a href="/gui_eq">EQ</a>
-    </td>
-    <td valign="top">
+     </td>
+     <td valign="center" align="left">
       <a href="javascript:volume_up()">
         <img src="/~~vol_up_png"/>
       </a>
-    </td>
-    <td valign="top">
-      <font color="white">/</font>
-    </td>
-    <td valign="top">
       <a href="javascript:volume_down()">
         <img src="/~~vol_down_png"/>
       </a>
     </td>
-    <td valign="top" width="100%">
-    </td>
+    <td valign="top">
+      <form id="searchform" action="/gui_search" method="get">
+       Search:&nbsp;<input name="search" width="20"/>
+      </form>
+  </td>
    </tr>
  </table>
 

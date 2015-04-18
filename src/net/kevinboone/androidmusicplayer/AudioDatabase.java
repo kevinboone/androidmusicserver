@@ -357,17 +357,15 @@ public String getFilePathFromContentUri (Context context, Uri uri)
     }
 
 
-public List<String> findTracks (Context context, String search,
+public Set<String> findTracks (Context context, SearchSpec search,
       int start, int num)
    {
-   List<String> results = new ArrayList<String>();
+   Set<String> results = new TreeSet<String>();
    Uri uri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
    Cursor cur = context.getContentResolver().query(uri, null,
       MediaStore.Audio.Media.IS_MUSIC + " = 1", null, 
       MediaStore.Audio.Media.TITLE + "," + MediaStore.Audio.Media.TRACK);
-   int artistColumn = cur.getColumnIndex(MediaStore.Audio.Media.ARTIST);
-   int albumColumn = cur.getColumnIndex(MediaStore.Audio.Media.ALBUM);
-   int composerColumn = cur.getColumnIndex(MediaStore.Audio.Media.COMPOSER);
+   int titleColumn = cur.getColumnIndex(MediaStore.Audio.Media.TITLE);
    int idColumn = cur.getColumnIndex(MediaStore.Audio.Media._ID);
    int count = 0;
 
@@ -378,20 +376,28 @@ public List<String> findTracks (Context context, String search,
        long id = cur.getLong (idColumn);
        Uri extUri = ContentUris.withAppendedId 
           (android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
-        /*
-        String album = cur.getString (albumColumn);
-        if (album != null && album.length() > 0)
-         albums.add (album);
-        String composer = cur.getString (composerColumn);
-        if (composer != null && composer.length() > 0)
-         composers.add (composer);
-        String artist = cur.getString (artistColumn);
-        if (artist != null && artist.length() > 0)
-         artists.add (artist);
-        */
+        String title = cur.getString (titleColumn);
+        if (search == null)
+          {
+          if (count >= start)
+            {
+            results.add (extUri.toString());
+            count++;
+            }
+          }
+        else
+          {
+          if (title != null && title.length() > 0)
+            {
+            if (title.toLowerCase().indexOf 
+                (search.getText().toLowerCase()) >= 0)
+              {
+              if (count >= start)
+                results.add (extUri.toString());
+              }
+            }
+          }
         count++;
-        if (count >= start)
-          results.add (extUri.toString());
         } while (cur.moveToNext() && (num < 0 || results.size() <= num));
  
      cur.close();
@@ -403,6 +409,60 @@ public List<String> findTracks (Context context, String search,
   public int getApproxNumTracks ()
     {
     return approxNumTracks;
+    }
+
+
+  public Set<String> getMatchingAlbums (SearchSpec ss, int max) 
+    {
+    Set<String> results = new TreeSet<String>();
+
+    String text = ss.getText().toLowerCase();
+    for (String album : albums)
+      {
+      if (album.toLowerCase().indexOf (text) >= 0) 
+        {
+        results.add (album);
+        }
+      if (results.size() >= max) break;
+      }
+ 
+    return results;
+    }
+
+
+  public Set<String> getMatchingArtists (SearchSpec ss, int max) 
+    {
+    Set<String> results = new TreeSet<String>();
+
+    String text = ss.getText().toLowerCase();
+    for (String artist : artists)
+      {
+      if (artist.toLowerCase().indexOf (text) >= 0) 
+        {
+        results.add (artist);
+        }
+      if (results.size() >= max) break;
+      }
+ 
+    return results;
+    }
+
+
+  public Set<String> getMatchingComposers (SearchSpec ss, int max) 
+    {
+    Set<String> results = new TreeSet<String>();
+
+    String text = ss.getText().toLowerCase();
+    for (String composer : composers)
+      {
+      if (composer.toLowerCase().indexOf (text) >= 0) 
+        {
+        results.add (composer);
+        }
+      if (results.size() >= max) break;
+      }
+ 
+    return results;
     }
 
 }

@@ -25,9 +25,12 @@ public class WebPlayerService extends Service
       server = new WebServer (this);
       server.start();
       }
-    catch (IOException e)
+    catch (Throwable e)
       {
-      throw new RuntimeException (e);
+      // _Any_ exception thrown out of here will stop the app from running
+      //  at all, so the user will never know what went wrong
+      e.printStackTrace();
+      //throw new RuntimeException (e);
       }
     }
 

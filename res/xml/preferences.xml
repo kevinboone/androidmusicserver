@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+  <PreferenceCategory
+    android:title="General settings"
+    android:key="general_settings">
+
+    <EditTextPreference
+      android:key="port"
+      android:defaultValue="30000"
+      android:title="Port number" 
+      android:dialogTitle="Web server port number"
+      android:summary="Web server port number"
+      android:dialogMessage="Select the port number on which the server will listen for browser connections (1024-65535)"   
+      android:inputType="number"
+      />
+
+    <EditTextPreference
+      android:key="uiupdateinterval"
+      android:defaultValue="5"
+      android:title="Screen update interval" 
+      android:dialogTitle="Screen update interval in seconds"
+      android:summary="Screen update interval in seconds"
+      android:dialogMessage="The number of seconds between updates of the on-device status display (recommended values 2-10)"
+      android:inputType="number"
+      />
+
+    <!--EditTextPreference
+      android:key="webupdateinterval"
+      android:defaultValue="5"
+      android:title="Web browser update interval" 
+      android:dialogTitle="Web browser update interval in seconds"
+      android:summary="Web browser update interval in seconds"
+      android:dialogMessage="The number of seconds between updates of the web browser page (recommended values 2-10)"
+      android:inputType="number"
+      /-->
+
+    <EditTextPreference
+      android:key="tracksperpage"
+      android:defaultValue="30"
+      android:title="Tracks per page" 
+      android:dialogTitle="Number of tracks in each page of the track browser"
+      android:summary="Number of tracks in each page of the track browser"
+      android:dialogMessage="The number of tracks in each page of the track browser (recommended values 20-50)"
+      android:inputType="number"
+      />
+
+    <EditTextPreference
+      android:key="maxsearchresults"
+      android:defaultValue="20"
+      android:title="Maximum search results" 
+      android:dialogTitle="Maximum number of search results on the search page"
+      android:summary="Maximum number of search results on the search page"
+      android:dialogMessage="Maximum number of search results of each type (album, track, etc) on the search page (recommended values 10-30)"
+      android:inputType="number"
+      />
+
+  </PreferenceCategory>
+</PreferenceScreen>
+

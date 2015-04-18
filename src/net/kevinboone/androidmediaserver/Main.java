@@ -13,14 +13,26 @@ import android.widget.*;
 import android.media.*;
 import android.content.*;
 import java.io.*;
+import java.net.*;
+import android.preference.*;
 import net.kevinboone.androidmediaserver.client.*;
 
 /** This class contains the Android user interface, such as it is. */
 public class Main extends Activity
 {
     private Handler handler = new Handler();
-    private int port = 30000;
-    private int uiUpdateInterval = 5000; // msec
+    // Ugly, but we need the port number to be accessible to the background
+    //  service, and there is no easy way to pass arguments to it
+    protected static int port = 30000;
+    protected int uiUpdateInterval = 5000; // msec
+    protected int webUpdateInterval = 5000; // msec
+    protected static int tracksPerPage = 30;
+    protected static int maxSearchResults = 20;
+
+
+    /*An arbitrary value to distinguish completion of the Settings activity
+    from any other activity (there are none, at present) */
+    private static final int RESULT_SETTINGS = 0;
 
     TextView titleView;
     TextView albumView;
@@ -42,7 +54,7 @@ public class Main extends Activity
       };
 
     /**
-       Update the UI from the server thread. 
+       Update the UI from the server monitoring thread. 
     */
     public void updateUI()
       {
@@ -56,9 +68,18 @@ public class Main extends Activity
         transportStatusView.setText 
           (status.transportStatusToString (status.getTransportStatus()));
         }
+      catch (ConnectException e)
+        {
+        /* This is probably the user's only indication that the web server
+        did not initialize. */
+        Log.e ("AMS", e.toString());
+        messageView.setText 
+          ("Can't connect to service: check server port number and restart");
+        }
       catch (Exception e)
         {
         Log.e ("AMS", e.toString());
+        messageView.setText (e.toString());
         }
       }
 
@@ -76,6 +97,8 @@ public class Main extends Activity
         new StrictMode.ThreadPolicy.Builder().permitAll().build();
       StrictMode.setThreadPolicy(policy); 
 
+      applySettings();
+
       setContentView(R.layout.main);
       setVolumeControlStream(AudioManager.STREAM_MUSIC);
       TextView urlView = (TextView) findViewById (R.id.url);
@@ -84,13 +107,13 @@ public class Main extends Activity
       artistView = (TextView) findViewById (R.id.artist);
       albumView = (TextView) findViewById (R.id.album);
       transportStatusView = (TextView) findViewById (R.id.transport_status);
+
       String ip = AndroidNetworkUtil.getWifiIP(this);
       if (ip != null)
         {
         try 
           {
-          Intent intent = new Intent (this, WebPlayerService.class);
-          startService (intent);
+          startBackgroundService();
           urlView.setText ("http://" + ip + ":" + port + "/");
           
           // If we get here, with luck the server is running
@@ -98,7 +121,7 @@ public class Main extends Activity
           handler.removeCallbacks (updateUITask); 
           handler.postDelayed (updateUITask, uiUpdateInterval);
           } 
-        catch (Exception e) 
+        catch (Throwable e) 
           {
           messageView.setText ("Error: " + e.getMessage());
           }
@@ -111,11 +134,32 @@ public class Main extends Activity
 
     @Override
     public void onDestroy()
-    {
-    super.onDestroy();
-    Intent intent = new Intent (this, WebPlayerService.class);
-    stopService (intent);
-    }
+      {
+      stopBackgroundService();
+      super.onDestroy();
+      }
+
+
+   public void stopBackgroundService ()
+     {
+     Intent intent = new Intent (this, WebPlayerService.class);
+     stopService (intent);
+     }
+
+
+   public void startBackgroundService ()
+     {
+     Intent intent = new Intent (this, WebPlayerService.class);
+     startService (intent);
+     }
+
+
+   public void buttonSettingsClicked(View dummy)
+     {
+     Intent i = new Intent (this, SettingsActivity.class);
+     startActivityForResult(i, RESULT_SETTINGS);
+     }
+
 
    public void buttonShutdownClicked(View dummy)
    {
@@ -226,6 +270,57 @@ public class Main extends Activity
       messageView.setText (e.getMessage());
       }
     }
+
+  @Override
+  protected void onActivityResult (int requestCode,
+      int resultCode, Intent data)
+    {
+    super.onActivityResult (requestCode, resultCode, data);
+    switch (requestCode)
+      {
+      case RESULT_SETTINGS:
+        applySettings (); 
+      break;
+      }
+    }
+
+
+  private void applySettings ()
+    {
+    uiUpdateInterval = getIntPreference ("uiupdateinterval", 5) * 1000;
+    maxSearchResults = getIntPreference ("maxsearchresults", 20);
+    tracksPerPage = getIntPreference ("tracksperpage", 30);
+    webUpdateInterval = getIntPreference ("webupdateinterval", 5) * 1000;
+    int newPort = getIntPreference ("port", 30000);
+    if (newPort != port)
+      {
+      port = newPort;
+      Log.w ("AMS", "Changing port number to " + port);
+      stopBackgroundService();
+      startBackgroundService();
+      }
+    }
+
+  /** Wrapper around Android's brain-dead (non-)handling of integer-valued
+ *       user preferences :/. */
+  int getIntPreference (String name, int deflt)
+    {
+    SharedPreferences sharedPrefs =
+      PreferenceManager.getDefaultSharedPreferences (this);
+
+    int value = deflt;
+    try
+      {
+      value =
+        Integer.parseInt (sharedPrefs.getString (name, "" + deflt));
+      }
+    catch (Exception e)
+      {
+      value = deflt;
+      }
+    return value;
+    }
+
 
 
 }

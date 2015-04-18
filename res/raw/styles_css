@@ -76,6 +76,13 @@ a:active
   padding-top: 1em;
   }
 
+.pagesubsubtitle
+  {
+  font-weight: bold;
+  font-style: italic;
+  padding-top: 1em;
+  }
+
 .menutable
   {
   margin: 0;
@@ -90,5 +97,24 @@ a:active
 
 .maincontent
   {
-  margin: 2em;
+  margin-left: 2em;
   }
+
+
+#searchform
+  {
+  padding: 0;
+  margin: 0;
+  text-align: right;
+  color: #4480b4;
+  font-size: smaller;
+  font-family: sans-serif;
+  }
+
+#searchform input
+  {
+  background-color: #444444;
+  color: #4480b4;
+  border: solid black;
+  }
+

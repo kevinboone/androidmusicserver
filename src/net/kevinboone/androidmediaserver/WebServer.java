@@ -20,12 +20,12 @@ import net.kevinboone.androidmusicplayer.Player;
 import net.kevinboone.androidmusicplayer.PlayerException;
 import net.kevinboone.androidmusicplayer.TrackInfo;
 import net.kevinboone.androidmusicplayer.Errors;
+import net.kevinboone.androidmusicplayer.SearchSpec;
 import net.kevinboone.textutils.*;
 
 public class WebServer extends NanoHTTPD 
 {
 protected static String DOCROOT="/";
-protected static int TRACKS_PER_PAGE = 30;
 private Context context = null;
 private String lastModifiedString = null; 
 private Date lastModifiedDate = null; 
@@ -33,7 +33,7 @@ private Player player;
 
 public WebServer (Context context)
   {
-  super(30000);
+  super (Main.port);
   this.context = context;
   player = new Player (context);
   setLastModifiedToNow();
@@ -130,6 +130,10 @@ public WebServer (Context context)
         return handleGuiAlbumsByArtist (parameters);
       if (uri.indexOf ("/gui_albums_by_artist") == 0)
         return handleGuiAlbumsByArtist (parameters);
+      if (uri.indexOf ("gui_tracks_by_album") == 0)
+        return handleGuiTracksByAlbum (parameters);
+      if (uri.indexOf ("/gui_tracks_by_album") == 0)
+        return handleGuiTracksByAlbum (parameters);
       if (uri.indexOf ("gui_playlist") == 0)
         return handleGuiPlaylist (parameters);
       if (uri.indexOf ("/gui_playlist") == 0)
@@ -158,10 +162,10 @@ public WebServer (Context context)
         return handleGuiArtists (parameters);
       if (uri.indexOf ("/gui_artists") == 0)
         return handleGuiArtists (parameters);
-      if (uri.indexOf ("gui_tracks_by_album") == 0)
-        return handleGuiTracksByAlbum (parameters);
-      if (uri.indexOf ("/gui_tracks_by_album") == 0)
-        return handleGuiTracksByAlbum (parameters);
+      if (uri.indexOf ("gui_search") == 0)
+        return handleGuiSearch (parameters);
+      if (uri.indexOf ("/gui_search") == 0)
+        return handleGuiSearch (parameters);
       if (uri.indexOf ("/gui_eq") == 0)
         return handleGuiEq (parameters);
       if (uri.indexOf ("gui_eq") == 0)
@@ -275,13 +279,10 @@ public WebServer (Context context)
   /**
     Formats a list of artists, maintained by MediaDatabase
   */
-  String makeArtistList (Map<String,String> parameters, boolean covers)
+  String makeArtistListFromSet (Map<String,String> parameters, 
+      boolean covers, Set<String> artists)
     {
     StringBuffer sb = new StringBuffer();
-    sb.append ("<span class=\"pagetitle\">" + "Artists" + "</span><p/>");
-    sb.append ("<table>");
-
-    Set<String> artists = player.getArtists();
     for (String artist: artists)
       {
       sb.append ("<tr>");
@@ -292,6 +293,46 @@ public WebServer (Context context)
       sb.append (" <a href=\"/gui_albums_by_artist?artist=" 
               + URLEncoder.encode (artist) + "&" + makeGenParams (parameters) + 
                 "\"><span>" + artist + "</span></a> ");
+      sb.append ("</td>");
+      sb.append ("</tr>");
+      }
+    sb.append ("</table>\n");
+    return new String (sb);
+    }
+
+  /**
+    Formats a list of artists, maintained by MediaDatabase
+  */
+  String makeArtistList (Map<String,String> parameters, boolean covers)
+    {
+    StringBuffer sb = new StringBuffer();
+    sb.append ("<span class=\"pagetitle\">" + "Artists" + "</span><p/>");
+    sb.append ("<table>");
+
+    Set<String> artists = player.getArtists();
+    sb.append (makeArtistListFromSet (parameters, covers, artists));
+    return new String (sb);
+    }
+
+  
+  /**
+    Formats a list of composers, maintained by MediaDatabase
+  */
+  String makeComposerListFromSet (Map<String,String> parameters, 
+      boolean covers, Set<String> composers)
+    {
+    StringBuffer sb = new StringBuffer();
+    for (String composer: composers)
+      {
+      sb.append ("<tr>");
+      sb.append ("<td valign=\"top\">");
+// Nothing in the image slot yet
+      sb.append ("</td>");
+      sb.append ("<td valign=\"top\">");
+      sb.append (" <a href=\"/gui_albums_by_composer?composer=" 
+              + URLEncoder.encode (composer) + "&" + 
+                makeGenParams (parameters) + 
+                "\"><span>" + composer + "</span></a> ");
       sb.append ("</td>");
       sb.append ("</tr>");
       }
@@ -310,21 +351,7 @@ public WebServer (Context context)
     sb.append ("<table>");
 
     Set<String> composers = player.getComposers();
-    for (String composer: composers)
-      {
-      sb.append ("<tr>");
-      sb.append ("<td valign=\"top\">");
-// Nothing in the image slot yet
-      sb.append ("</td>");
-      sb.append ("<td valign=\"top\">");
-      sb.append (" <a href=\"/gui_albums_by_composer?composer=" 
-              + URLEncoder.encode (composer) + "&" + 
-                makeGenParams (parameters) + 
-                "\"><span>" + composer + "</span></a> ");
-      sb.append ("</td>");
-      sb.append ("</tr>");
-      }
-    sb.append ("</table>\n");
+    sb.append (makeComposerListFromSet (parameters, covers, composers));
     return new String (sb);
     }
 
@@ -988,6 +1015,23 @@ public WebServer (Context context)
 
 
   /**
+    Make the search results page.
+  */
+  protected Response handleGuiSearch (Map<String,String> parameters)
+    {
+    String search = parameters.get("search");
+    if (search == null)
+      search = ""; // Prevent a crash
+
+    String answer = makeHtmlHeader();
+    answer += makeSearchResults (parameters, search, false); // FRIG -- voers
+    answer += makeControls(parameters);
+    answer += makeHtmlFooter();
+    return new NanoHTTPD.Response (answer);
+    }
+
+
+  /**
     Make the album-list-by-artist page for the "artist " 
     specified in the request.
   */
@@ -1141,54 +1185,12 @@ public WebServer (Context context)
     }
 
 
-  protected String makeTrackList (Map<String, String> parameters, 
-      boolean covers, int start, String search)
+  protected String makeTrackListFromSetOfUris (Map<String, String> parameters, 
+      boolean covers, Set<String> trackUris)
     {
-    // TODO add search
     StringBuffer sb = new StringBuffer();
 
-    sb.append 
-     ("<span class=\"pagesubtitle\">Tracks</span><br/>");
-    sb.append ("<p/>\n");
-
-    if (start != 0)
-      {
-      String prevUrl = "/gui_tracks?start=" + "0" 
-       + "&" + makeGenParams (parameters);
-      sb.append ("<a href=\"" + prevUrl 
-       + "\"><span class=\"textbuttonspan\">First</span> </a>");
-      }    
-
-    if (start >= TRACKS_PER_PAGE)
-      {
-      String prevUrl = "/gui_tracks?start=" + (start - TRACKS_PER_PAGE) 
-       + "&" + makeGenParams (parameters);
-      sb.append ("<a href=\"" + prevUrl 
-       + "\"><span class=\"textbuttonspan\">Previous</span> </a>");
-      }    
-
-    int approxNumTracks = player.getApproxNumTracks();
-    List<String> trackUris = player.findTracks (null, start, TRACKS_PER_PAGE);
-    if (trackUris.size() == 0)
-      {
-      sb.append ("<p/>No more tracks<p/>");
-      }
-    else
-      {
-      String nextUrl = "/gui_tracks?start=" + (start + TRACKS_PER_PAGE) 
-       + "&" + makeGenParams (parameters);
-      sb.append ("<a href=\"" + nextUrl + 
-       "\"><span class=\"textbuttonspan\">Next</span></a>");
-      sb.append ("<p/>\n");
-
-      int lastTrackNum = start + 1 + trackUris.size();
-      if (lastTrackNum > approxNumTracks) lastTrackNum = approxNumTracks;
-
-      sb.append ("<i>Tracks " + (start + 1) + "-" + lastTrackNum 
-         + " of " 
-          + approxNumTracks + "</i><p/>\n");
-
-      for (String trackUri : trackUris)
+    for (String trackUri : trackUris)
         {
         TrackInfo ti = player.getTrackInfo (trackUri);
         sb.append ("<table callspacing=\"0\" cellpadding=\"5\">");
@@ -1215,6 +1217,135 @@ public WebServer (Context context)
         sb.append ("</tr>");
         sb.append ("</table>\n");
         }
+
+    return new String (sb);
+    }
+
+  protected String makeTrackList (Map<String, String> parameters, 
+      boolean covers, int start, String search)
+    {
+    // TODO add search
+    StringBuffer sb = new StringBuffer();
+
+    sb.append 
+     ("<span class=\"pagesubtitle\">Tracks</span><br/>");
+    sb.append ("<p/>\n");
+
+    if (start != 0)
+      {
+      String prevUrl = "/gui_tracks?start=" + "0" 
+       + "&" + makeGenParams (parameters);
+      sb.append ("<a href=\"" + prevUrl 
+       + "\"><span class=\"textbuttonspan\">First</span> </a>");
+      }    
+
+    if (start >= Main.tracksPerPage)
+      {
+      String prevUrl = "/gui_tracks?start=" + (start - Main.tracksPerPage) 
+       + "&" + makeGenParams (parameters);
+      sb.append ("<a href=\"" + prevUrl 
+       + "\"><span class=\"textbuttonspan\">Previous</span> </a>");
+      }    
+
+    int approxNumTracks = player.getApproxNumTracks();
+    Set<String> trackUris = player.findTracks (null, start, Main.tracksPerPage);
+    if (trackUris.size() == 0)
+      {
+      sb.append ("<p/>No more tracks<p/>");
+      }
+    else
+      {
+      String nextUrl = "/gui_tracks?start=" + (start + Main.tracksPerPage) 
+       + "&" + makeGenParams (parameters);
+      sb.append ("<a href=\"" + nextUrl + 
+       "\"><span class=\"textbuttonspan\">Next</span></a>");
+      sb.append ("<p/>\n");
+
+      int lastTrackNum = start + 1 + trackUris.size();
+      if (lastTrackNum > approxNumTracks) lastTrackNum = approxNumTracks;
+
+      sb.append ("<i>Tracks " + (start + 1) + "-" + lastTrackNum 
+         + " of " 
+          + approxNumTracks + "</i><p/>\n");
+  
+      sb.append (makeTrackListFromSetOfUris (parameters, covers, trackUris));
+      }
+
+    return new String (sb);
+    }
+
+
+  protected String makeSearchResults (Map<String,String> parameters, 
+      String search, boolean covers)
+    {
+    StringBuffer sb = new StringBuffer();
+
+    sb.append 
+     ("<span class=\"pagesubtitle\">Search results</span><br/>");
+    sb.append ("<p/>\n");
+
+    if (search.length() == 0)
+      {
+      sb.append ("Search text cannot be empty.\n");
+      }
+    else
+      {
+      sb.append 
+       ("<span class=\"pagesubsubtitle\">Album results for '" + search 
+        +  "'</span><br/>");
+
+      SearchSpec ss = new SearchSpec (search);
+      Set<String> albums = player.getMatchingAlbums 
+        (ss, Main.maxSearchResults); 
+      
+      if (albums.size() > 0)
+        sb.append (makeAlbumListFromSet (parameters, covers, albums));
+      else
+        sb.append ("No matches\n");
+
+      sb.append ("<p/>\n");
+
+      sb.append 
+       ("<span class=\"pagesubsubtitle\">Artist results for '" + search 
+        +  "'</span><br/>");
+
+      Set<String> artists = player.getMatchingArtists
+        (ss, Main.maxSearchResults); 
+
+      if (artists.size() > 0)
+        sb.append (makeArtistListFromSet (parameters, covers, artists));
+      else
+        sb.append ("No matches\n");
+
+      sb.append ("<p/>\n");
+
+      sb.append 
+       ("<span class=\"pagesubsubtitle\">Composer results for '" + search 
+        +  "'</span><br/>");
+
+      Set<String> composers = player.getMatchingComposers
+        (ss, Main.maxSearchResults); 
+
+      if (composers.size() > 0)
+        sb.append (makeComposerListFromSet (parameters, covers, composers));
+      else
+        sb.append ("No matches\n");
+
+      sb.append ("<p/>\n");
+
+      sb.append 
+       ("<span class=\"pagesubsubtitle\">Track results for '" + search 
+        +  "'</span><br/>");
+
+      Set<String> tracks = player.findTracks 
+        (ss, 0, Main.maxSearchResults); 
+
+      if (tracks.size() > 0)
+        sb.append (makeTrackListFromSetOfUris (parameters, covers, tracks));
+      else
+        sb.append ("No matches\n");
+
+      sb.append ("<p/>\n");
       }
 
     return new String (sb);
