@@ -31,6 +31,8 @@ private Context context = null;
 private String lastModifiedString = null; 
 private Date lastModifiedDate = null; 
 private Player player;
+
+// Cache the HTML template, so it doesn't need to be reread on each request
 private final String htmlTemplate;
 
 public WebServer (Context context)
@@ -173,8 +175,12 @@ public WebServer (Context context)
         return handleGuiEq (parameters);
       if (uri.indexOf ("gui_eq") == 0)
         return handleGuiEq (parameters);
+      if (uri.indexOf ("gui_about") == 0)
+        return handleGuiAbout (parameters);
+      if (uri.indexOf ("/gui_about") == 0)
+        return handleGuiAbout (parameters);
       return new NanoHTTPD.Response 
-        (Response.Status.OK, "text/plain", "Unknown request: " + uri); // TODO
+        (Response.Status.OK, "text/plain", "Unknown request: " + uri); 
       }
     }
 
@@ -550,28 +556,6 @@ public WebServer (Context context)
     }
 
 
-  String makeControls (Map<String,String> parameters)
-    {
-    StringBuffer sb = new StringBuffer();
-
-    sb.append ("<p/>");
-    sb.append ("<hr/>");
-    sb.append ("<a href=\"/\">Home</a> | ");
-    sb.append ("<a href=\"/gui_files\">Files</a> | ");
-    sb.append ("<a href=\"/gui_albums?" + makeGenParams (parameters) 
-       + "\">Albums</a> | ");
-    sb.append ("<a href=\"/gui_genres?" + makeGenParams (parameters) 
-       + "\">Genres</a> | ");
-    sb.append ("<a href=\"/gui_artists?" + makeGenParams (parameters) 
-       + "\">Artists</a> | ");
-    sb.append ("<a href=\"/gui_playlist?" + makeGenParams (parameters) 
-       + "\">Playlist</a>");
-    sb.append ("<p/>");
-
-    return new String (sb);
-    }
-
-
   NanoHTTPD.Response serveFileResource (String filePath) 
     {
     try
@@ -841,7 +825,6 @@ public WebServer (Context context)
 
   protected String getTransportStatusAsJSON ()
     {
-    // TODO
     String transport = "stopped";
     String uri = "";
     String duration = "0";
@@ -922,9 +905,14 @@ public WebServer (Context context)
  **/
   protected String wrapHtml (String body, Map<String,String> parameters)
     {
-Log.w ("XXX", "HELLO");
-Log.w ("XXX", "HTML=" + htmlTemplate);
-    return htmlTemplate.replace ("%%BODY%%", body);  
+    String s = htmlTemplate;
+    s = s.replace ("%%BODY%%", body);  
+    String covers = parameters.get ("covers");
+    if (covers != null && covers.length() != 0)
+      s = s.replace ("%%COVERS%%", covers);  
+    else
+      s = s.replace ("%%COVERS%%", "false");  
+    return s;
     }
 
 
@@ -942,7 +930,6 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
       covers = true;
 
     String answer = makeTracksByAlbum (album, covers);
-    answer += makeControls(parameters);
     answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
@@ -962,7 +949,6 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
       covers = true;
 
     String answer = makeAlbumsByGenre (parameters, genre, covers);
-    answer += makeControls(parameters);
     answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
@@ -977,8 +963,12 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
     if (search == null)
       search = ""; // Prevent a crash
 
-    String answer = makeSearchResults (parameters, search, false); // FRIG -- voers
-    answer += makeControls(parameters);
+    boolean covers = false;
+    if ("true".equals (parameters.get("covers")))
+      covers = true;
+
+
+    String answer = makeSearchResults (parameters, search, covers); 
     answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
@@ -999,7 +989,6 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
       covers = true;
 
     String answer = makeAlbumsByArtist (parameters, artist, covers);
-    answer += makeControls(parameters);
     answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
@@ -1020,7 +1009,6 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
       covers = true;
 
     String answer = makeAlbumsByComposer (parameters, composer, covers);
-    answer += makeControls(parameters);
     answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
@@ -1037,7 +1025,6 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
       path = "/";
 
     String answer = makeDirList (path, parameters); 
-    answer += makeControls(parameters);
     answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
@@ -1052,7 +1039,6 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
     if ("true".equals (parameters.get("covers")))
       covers = true;
     String answer = makeAlbumList (parameters, covers); 
-    answer += makeControls(parameters);
     answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
@@ -1071,7 +1057,6 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
     if (sStart != null && sStart.length() > 0)
       start = Integer.parseInt (sStart);
     String answer = makeTrackList (parameters, covers, start, null); //TOD search 
-    answer += makeControls(parameters);
     answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
@@ -1080,7 +1065,13 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
   protected Response handleGuiEq (Map<String,String> parameters)
     {
     String answer = makeEq (parameters); 
-    answer += makeControls(parameters);
+    answer = wrapHtml (answer, parameters);
+    return new NanoHTTPD.Response (answer);
+    }
+
+  protected Response handleGuiAbout (Map<String,String> parameters)
+    {
+    String answer = makeAbout (parameters); 
     answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
@@ -1094,7 +1085,6 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
     if ("true".equals (parameters.get("covers")))
       covers = true;
     String answer = makeGenreList (parameters, covers); 
-    answer += makeControls(parameters);
     answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
@@ -1108,7 +1098,6 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
     if ("true".equals (parameters.get("covers")))
       covers = true;
     String answer = makeArtistList (parameters, covers); 
-    answer += makeControls(parameters);
     answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
@@ -1123,7 +1112,6 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
     if ("true".equals (parameters.get("covers")))
       covers = true;
     String answer = makeComposerList (parameters, covers); 
-    answer += makeControls(parameters);
     answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
@@ -1168,7 +1156,6 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
   protected String makeTrackList (Map<String, String> parameters, 
       boolean covers, int start, String search)
     {
-    // TODO add search
     StringBuffer sb = new StringBuffer();
 
     sb.append 
@@ -1390,6 +1377,31 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
     return new String (sb);
     }
 
+
+  protected String makeAbout (Map<String,String> parameters)
+    {
+    StringBuffer sb = new StringBuffer();
+
+    sb.append 
+     ("<span class=\"pagesubtitle\">About Android Music Server</span><br/>");
+    sb.append ("<p/>\n");
+    sb.append ("Version: ");
+    sb.append (Version.getVersionString());
+    sb.append ("<p/>\n");
+    sb.append ("Build date: ");
+    sb.append (Version.getBuildDateString (context));
+    sb.append ("<p/>\n");
+    sb.append ("Android Music Server is maintained by Kevin Boone, and ");
+    sb.append ("distributed free of charge ");
+    sb.append ("as open source under the terms of the GNU Public Licence, ");
+    sb.append ("v2.0.");
+    sb.append ("<p/>\n");
+
+
+    return new String (sb);
+    }
+
+
   
   protected String makeHomePage (Map<String,String> parameters)
     {
@@ -1435,6 +1447,7 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
      ("<span class=\"pagesubtitle\">Administration</span><br/>");
     sb.append ("&nbsp;&nbsp;<a href=\"javascript:rescan_catalog()\">Rescan the media catalog (quick)</a><br/>");
     sb.append ("&nbsp;&nbsp;<a href=\"javascript:rescan_filesystem()\">Rescan the filesystem (slow)</a><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"gui_about\">About Android Music Server</a><br/>");
     sb.append ("<p/>");
 
 
@@ -1453,7 +1466,6 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
     {
     String answer = "<span class=\"pagetitle\">Main index</span><p/>"; 
     answer += makeHomePage(parameters);
-    answer += makeControls(parameters);
     answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
@@ -1485,7 +1497,6 @@ Log.w ("XXX", "HTML=" + htmlTemplate);
       }
     answer += "<p/>\n";
   
-    answer += makeControls(parameters);
     answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }

@@ -30,6 +30,7 @@
     <td valign="top">
       <form id="searchform" action="/gui_search" method="get">
        Search:&nbsp;<input name="search" width="20"/>
+      <input type="hidden" name="covers" value="%%COVERS%%"/>
       </form>
   </td>
    </tr>
@@ -98,6 +99,15 @@
   </div>
 
 %%BODY%%
+
+  <hr/>
+  <a href="/">Home</a> | 
+  <a href="/gui_files">Files</a> | 
+  <a href="/gui_albums?covers=%%COVERS%%">Albums</a> | 
+  <a href="/gui_genres?covers=%%COVERS%%">Genres</a> | 
+  <a href="/gui_artists?covers=%%COVERS%%">Artists</a> | 
+  <a href="/gui_playlist?covers=%%COVERS%%">Playlist</a>
+  <p/>
 
   </div>
  </body>
