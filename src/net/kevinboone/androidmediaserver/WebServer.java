@@ -11,6 +11,7 @@ import java.io.*;
 import java.net.*;
 import android.os.*;
 import android.content.*;
+import android.content.res.*;
 import android.graphics.*;
 import android.media.MediaPlayer;
 import android.util.Log;
@@ -30,12 +31,14 @@ private Context context = null;
 private String lastModifiedString = null; 
 private Date lastModifiedDate = null; 
 private Player player;
+private final String htmlTemplate;
 
 public WebServer (Context context)
   {
   super (Main.port);
   this.context = context;
   player = new Player (context);
+  htmlTemplate = getHtmlTemplate ();
   setLastModifiedToNow();
   }
 
@@ -782,90 +785,36 @@ public WebServer (Context context)
 
 
   /**
-  Returns an embedded binary object with the appropriate MIME type. THis is
-  all a but ugly, but it's hard to provide bunary files with an Android
-  app in a better way.
+  Returns an embedded binary object with the appropriate MIME type,
+  from the assets/docroot directory
   */
   NanoHTTPD.Response serveResource (String resource)
     {
-    if ("styles_css".equals (resource))
+    String assetFile = "docroot/" + resource;
+    int p = assetFile.lastIndexOf ('_');
+    if (p > 0)
+      assetFile = assetFile.substring (0, p) + "." + assetFile.substring (p+1);
+    try
       {
-      InputStream is = context.getResources().openRawResource 
-        (R.raw.styles_css);
-      return new NanoHTTPD.Response (Response.Status.OK, "text/css", is);
+      AssetManager am = context.getAssets();
+      InputStream is = am.open (assetFile); 
+      String mimeType = FileUtils.getMimeType (resource);
+      return new NanoHTTPD.Response (Response.Status.OK, mimeType, is);
       }
-    else if ("functions_js".equals (resource))
+    catch (IOException e)
       {
-      InputStream is = context.getResources().openRawResource 
-        (R.raw.functions_js);
-      return new NanoHTTPD.Response (Response.Status.OK, "text/javascript", is);
+      return new NanoHTTPD.Response (Response.Status.INTERNAL_ERROR, 
+        "text/plain", e.toString());
       }
-    else if ("logo_png".equals (resource))
-      {
-      InputStream is = context.getResources().openRawResource 
-        (R.raw.logo_png);
-      return new NanoHTTPD.Response (Response.Status.OK, "image/png", is);
-      }
-    else if ("default_cover_png".equals (resource))
-      {
-      InputStream is = context.getResources().openRawResource 
-        (R.raw.default_cover_png);
-      return new NanoHTTPD.Response (Response.Status.OK, "image/png", is);
-      }
-    else if ("playbutton_png".equals (resource))
-      {
-      InputStream is = context.getResources().openRawResource 
-        (R.raw.playbutton_png);
-      return new NanoHTTPD.Response (Response.Status.OK, "image/png", is);
-      }
-    else if ("prevbutton_png".equals (resource))
-      {
-      InputStream is = context.getResources().openRawResource 
-        (R.raw.prevbutton_png);
-      return new NanoHTTPD.Response (Response.Status.OK, "image/png", is);
-      }
-    else if ("pausebutton_png".equals (resource))
-      {
-      InputStream is = context.getResources().openRawResource 
-        (R.raw.pausebutton_png);
-      return new NanoHTTPD.Response (Response.Status.OK, "image/png", is);
-      }
-    else if ("nextbutton_png".equals (resource))
-      {
-      InputStream is = context.getResources().openRawResource 
-        (R.raw.nextbutton_png);
-      return new NanoHTTPD.Response (Response.Status.OK, "image/png", is);
-      }
-    else if ("stopbutton_png".equals (resource))
-      {
-      InputStream is = context.getResources().openRawResource 
-        (R.raw.stopbutton_png);
-      return new NanoHTTPD.Response (Response.Status.OK, "image/png", is);
-      }
-    else if ("vol_up_png".equals (resource))
-      {
-      InputStream is = context.getResources().openRawResource 
-        (R.raw.vol_up_png);
-      return new NanoHTTPD.Response (Response.Status.OK, "image/png", is);
-      }
-    else if ("vol_down_png".equals (resource))
-      {
-      InputStream is = context.getResources().openRawResource 
-        (R.raw.vol_down_png);
-      return new NanoHTTPD.Response (Response.Status.OK, "image/png", is);
-      }
-    else
-      return new NanoHTTPD.Response 
-        (Response.Status.OK, "text/plain", "No resource " + resource);
     }
 
 
-  protected String makeHtmlHeader ()
+  protected String getHtmlTemplate ()
     {
     try
       {
       InputStream is = context.getResources().openRawResource 
-        (R.raw.header_html);
+        (R.raw.template);
       Scanner s = new Scanner(is).useDelimiter("\\A");
       String ret = s.hasNext() ? s.next() : "";
       is.close();
@@ -877,11 +826,6 @@ public WebServer (Context context)
       }
     }
 
-
-  protected String makeHtmlFooter ()
-    {
-    return "</div></body></html>\n";
-    }
 
   protected String makeRedirect (String url)
     {
@@ -972,6 +916,18 @@ public WebServer (Context context)
     return makeJSONStatusResponse (-1, e.toString());
     }
 
+
+  /** 
+ *   Put the HTML header and footer around the bdody text
+ **/
+  protected String wrapHtml (String body, Map<String,String> parameters)
+    {
+Log.w ("XXX", "HELLO");
+Log.w ("XXX", "HTML=" + htmlTemplate);
+    return htmlTemplate.replace ("%%BODY%%", body);  
+    }
+
+
   /**
     Make the track list-by-album page for the "album" specified in the request
   */
@@ -985,10 +941,9 @@ public WebServer (Context context)
     if ("true".equals (parameters.get("covers")))
       covers = true;
 
-    String answer = makeHtmlHeader();
-    answer += makeTracksByAlbum (album, covers);
+    String answer = makeTracksByAlbum (album, covers);
     answer += makeControls(parameters);
-    answer += makeHtmlFooter();
+    answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
 
@@ -1006,10 +961,9 @@ public WebServer (Context context)
     if ("true".equals (parameters.get("covers")))
       covers = true;
 
-    String answer = makeHtmlHeader();
-    answer += makeAlbumsByGenre (parameters, genre, covers);
+    String answer = makeAlbumsByGenre (parameters, genre, covers);
     answer += makeControls(parameters);
-    answer += makeHtmlFooter();
+    answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
 
@@ -1023,10 +977,9 @@ public WebServer (Context context)
     if (search == null)
       search = ""; // Prevent a crash
 
-    String answer = makeHtmlHeader();
-    answer += makeSearchResults (parameters, search, false); // FRIG -- voers
+    String answer = makeSearchResults (parameters, search, false); // FRIG -- voers
     answer += makeControls(parameters);
-    answer += makeHtmlFooter();
+    answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
 
@@ -1045,10 +998,9 @@ public WebServer (Context context)
     if ("true".equals (parameters.get("covers")))
       covers = true;
 
-    String answer = makeHtmlHeader();
-    answer += makeAlbumsByArtist (parameters, artist, covers);
+    String answer = makeAlbumsByArtist (parameters, artist, covers);
     answer += makeControls(parameters);
-    answer += makeHtmlFooter();
+    answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
 
@@ -1067,10 +1019,9 @@ public WebServer (Context context)
     if ("true".equals (parameters.get("covers")))
       covers = true;
 
-    String answer = makeHtmlHeader();
-    answer += makeAlbumsByComposer (parameters, composer, covers);
+    String answer = makeAlbumsByComposer (parameters, composer, covers);
     answer += makeControls(parameters);
-    answer += makeHtmlFooter();
+    answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
 
@@ -1085,10 +1036,9 @@ public WebServer (Context context)
     if (path == null || path.length() == 0)
       path = "/";
 
-    String answer = makeHtmlHeader();
-    answer += makeDirList (path, parameters); 
+    String answer = makeDirList (path, parameters); 
     answer += makeControls(parameters);
-    answer += makeHtmlFooter();
+    answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
 
@@ -1101,10 +1051,9 @@ public WebServer (Context context)
     boolean covers = false;
     if ("true".equals (parameters.get("covers")))
       covers = true;
-    String answer = makeHtmlHeader();
-    answer += makeAlbumList (parameters, covers); 
+    String answer = makeAlbumList (parameters, covers); 
     answer += makeControls(parameters);
-    answer += makeHtmlFooter();
+    answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
 
@@ -1121,20 +1070,18 @@ public WebServer (Context context)
     String sStart = parameters.get("start");
     if (sStart != null && sStart.length() > 0)
       start = Integer.parseInt (sStart);
-    String answer = makeHtmlHeader();
-    answer += makeTrackList (parameters, covers, start, null); //TOD search 
+    String answer = makeTrackList (parameters, covers, start, null); //TOD search 
     answer += makeControls(parameters);
-    answer += makeHtmlFooter();
+    answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
 
 
   protected Response handleGuiEq (Map<String,String> parameters)
     {
-    String answer = makeHtmlHeader();
-    answer += makeEq (parameters); 
+    String answer = makeEq (parameters); 
     answer += makeControls(parameters);
-    answer += makeHtmlFooter();
+    answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
 
@@ -1146,10 +1093,9 @@ public WebServer (Context context)
     boolean covers = false;
     if ("true".equals (parameters.get("covers")))
       covers = true;
-    String answer = makeHtmlHeader();
-    answer += makeGenreList (parameters, covers); 
+    String answer = makeGenreList (parameters, covers); 
     answer += makeControls(parameters);
-    answer += makeHtmlFooter();
+    answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
 
@@ -1161,10 +1107,9 @@ public WebServer (Context context)
     boolean covers = false;
     if ("true".equals (parameters.get("covers")))
       covers = true;
-    String answer = makeHtmlHeader();
-    answer += makeArtistList (parameters, covers); 
+    String answer = makeArtistList (parameters, covers); 
     answer += makeControls(parameters);
-    answer += makeHtmlFooter();
+    answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
 
@@ -1177,10 +1122,9 @@ public WebServer (Context context)
     boolean covers = false;
     if ("true".equals (parameters.get("covers")))
       covers = true;
-    String answer = makeHtmlHeader();
-    answer += makeComposerList (parameters, covers); 
+    String answer = makeComposerList (parameters, covers); 
     answer += makeControls(parameters);
-    answer += makeHtmlFooter();
+    answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
 
@@ -1507,11 +1451,10 @@ public WebServer (Context context)
   */
   protected Response handleGuiHome (Map<String,String> parameters)
     {
-    String answer = makeHtmlHeader();
-    answer += "<span class=\"pagetitle\">Main index</span><p/>"; 
+    String answer = "<span class=\"pagetitle\">Main index</span><p/>"; 
     answer += makeHomePage(parameters);
     answer += makeControls(parameters);
-    answer += makeHtmlFooter();
+    answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
 
@@ -1521,8 +1464,8 @@ public WebServer (Context context)
   */
   protected Response handleGuiPlaylist (Map<String,String> parameters)
     {
-    String answer = makeHtmlHeader();
-    answer += "<span class=\"pagetitle\">Playlist</span><p/>"; 
+    String answer = 
+      "<span class=\"pagetitle\">Playlist</span><p/>"; 
     if (player.getPlaylist().size() == 0)
       {
       answer += "<i>Playlist is empty</i>"; 
@@ -1543,7 +1486,7 @@ public WebServer (Context context)
     answer += "<p/>\n";
   
     answer += makeControls(parameters);
-    answer += makeHtmlFooter();
+    answer = wrapHtml (answer, parameters);
     return new NanoHTTPD.Response (answer);
     }
 
