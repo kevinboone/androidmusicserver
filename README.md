@@ -2,7 +2,7 @@
 
 
 Kevin's Music Server for Android provides a web browser interface to
-control playback of audio files stored on relatively modern (4.x) 
+control playback of audio files stored on relatively modern (4.x-9.0) 
 Android devices. 
 This allows the Android device
 to be used as a music server, in multi-room audio applications, among
@@ -26,12 +26,15 @@ starting and stopping it) looks like this:
 
 
 ## Features
-- Simple web interface -- works on most desktop web browsers 
-- and many mobile browsers </li>
-- Integrates with the Android media catalogue -- browse by album, artist, genre, composer, or track</li>
-- Supports file/folder browsing</li>
-- Media catalogue text search</li>
-- Equalizer</li>
-- Cover art (both baked-in and album-folder images)</li>
-- Playback control by headset or remote control</li>
+- Simple web interface -- works on most desktop web browsers and many mobile browsers 
+- Integrates with the Android media catalogue -- browse by album, artist, genre, composer, or track
+- Supports file/folder browsing
+- Media catalogue text search
+- Equalizer
+- Cover art (both baked-in and album-folder images)
+- Playback control by headset or remote control
+
+## Download
+
+[Download APK](apk/androidmusicserver-debug.apk)
 
