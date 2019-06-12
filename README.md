@@ -1,7 +1,5 @@
-##What is this
+## What is this?
 
-
-![Screenshot](androidmusicserverscreenshot.png)
 
 Kevin's Music Server for Android provides a web browser interface to
 control playback of audio files stored on relatively modern (4.x) 
@@ -17,7 +15,17 @@ genres or particular artists rather than displaying all
 albums on the same page. Album cover
 art images can be displayed (but see notes below about this, too).
 
-##Features
+The browser user interface looks like this:
+
+![Screenshot](androidmusicserverscreenshot.png)
+
+While the app itself (which will probably never be used, apart from
+starting and stopping it) looks like this:
+
+![Screenshot](androidmusicserverscreenshot2.png)
+
+
+## Features
 - Simple web interface -- works on most desktop web browsers 
 - and many mobile browsers </li>
 - Integrates with the Android media catalogue -- browse by album, artist, genre, composer, or track</li>
