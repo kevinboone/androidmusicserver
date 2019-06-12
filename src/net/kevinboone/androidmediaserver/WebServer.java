@@ -1427,7 +1427,7 @@ public WebServer (Context context)
 
     sb.append 
      ("<span class=\"pagesubtitle\">Browse files</span><br/>");
-    sb.append ("&nbsp;&nbsp;<a href=\"/gui_files\">Browse whole filesystem</a><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"/gui_files\">Browse whole filesystem (on older devices)</a><br/>");
     sb.append ("<p/>");
 
     sb.append 
@@ -1453,7 +1453,7 @@ public WebServer (Context context)
 
     sb.append 
      ("<span class=\"pagesubtitle\">Help</span><br/>");
-    sb.append ("&nbsp;&nbsp;<a href=\"http://kevinboone.net/README_androidmusicserver.html\">Read the on-line documentation</a><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"https://github.com/kevinboone/androidmusicserver\">View the GitHub project page (including documentation)</a><br/>");
     sb.append ("<p/>");
 
     return new String (sb);
