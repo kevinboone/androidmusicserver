@@ -1022,7 +1022,7 @@ public WebServer (Context context)
     {
     String path = parameters.get("path");
     if (path == null || path.length() == 0)
-      path = "/";
+      path = "/storage";
 
     String answer = makeDirList (path, parameters); 
     answer = wrapHtml (answer, parameters);
@@ -1427,7 +1427,9 @@ public WebServer (Context context)
 
     sb.append 
      ("<span class=\"pagesubtitle\">Browse files</span><br/>");
-    sb.append ("&nbsp;&nbsp;<a href=\"/gui_files\">Browse whole filesystem (on older devices)</a><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"/gui_files?path=/\">Browse whole filesystem (where supported)</a><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"/gui_files?path=/storage\">Browse main storage folder (where supported)</a><br/>");
+    sb.append ("&nbsp;&nbsp;<a href=\"/gui_files?path=/storage/emulated/0\">Browse internal storage (where supported)</a><br/>");
     sb.append ("<p/>");
 
     sb.append 

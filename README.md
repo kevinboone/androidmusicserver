@@ -131,7 +131,7 @@ you can
 freely bookmark albums, or artists, or filesystem locations for
 quick reference.
 
-Sadly, filesystem browsing won't work with Android releases after
+Sadly, filesystem browsing won't work well with Android releases after
 6.x or thereabouts -- the ability to read anything other than very
 specific locations has been removed. Worse, there's no 
 reasonably-straightforward, reliable, 
@@ -139,7 +139,16 @@ robust, way to determine which filesystem locations might contain
 audio, and be readable. In my darker moments, I think that Google 
 is deliberately trying to find new ways to break my apps. In any
 case, there's no point complaining to me about this -- go hassle
-Google, for what good that will do.
+Google, for what good that will do. In any case, the main page 
+presents some fileststem locations that _might_ be readable but,
+then again, might not. You'll notice that, when requesting a
+file listing, the URL issued by the browser contains the attribute
+`path=/xxx`. If you happen to know which directory contains audio
+files, and can be read, you can edit (and, presumably, bookmark)
+the path manually. For example, if your device supports plug-in
+SD cards, the root of the SD card is probably something like
+`/storage/XXX-XXXX`, and you might be able to find the value of
+'XXXX-XXXX' using a file manager.
 
 When browsing the filesystem (on devices that support this), you 
 can add files one at a time to the playlist, 
@@ -367,6 +376,19 @@ devices. Feel free to report others that work or don't work.
  - Samsung Note 3, with Android 4.4.2
 
 ## Limitations
+
+In general, Android Music Server supports whatever audio formats
+the device itself supports. When listing audio tracks by album/artist/etc
+you should never see anything that can't be played (unless it's actually
+a movie that Android has incorrectly identified as music). When listing
+files on the filesystem, you should also never see files that can't
+be played, 
+because the app won't display files whose
+names do not end in a recognized audio extension, like .MP3 or .FLAC -- 
+it's just
+too time-consuming to have to scan each file and try to work out
+its contents. This does mean that some files that could, in fact,
+be played never get listed.
 
 The are particular issues regarding the display of cover art: please
 see the section "Cover art" above.
