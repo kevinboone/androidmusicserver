@@ -36,5 +36,5 @@ starting and stopping it) looks like this:
 
 ## Download
 
-[Download APK](apk/androidmusicserver-debug.apk)
+![Download APK](apk/androidmusicserver-debug.apk)
 
