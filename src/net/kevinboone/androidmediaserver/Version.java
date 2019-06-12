@@ -13,7 +13,7 @@ import android.content.pm.*;
 
 public class Version
   {
-  private static final String versionString = "4.0.1";
+  private static final String versionString = "0.0.5";
 
   public static String getVersionString () { return versionString; }
 

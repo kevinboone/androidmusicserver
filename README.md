@@ -484,6 +484,17 @@ might not. If it doesn't, you're very welcome to fix it.
 <table cellpadding="5px">
   <tr>
     <td valign="top">
+      0.0.5
+    </td>
+    <td valign="top">
+      June 12 2019 
+    </td>
+    <td valign="top">
+      Various bug fixes related to later Android releases
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
       0.0.4
     </td>
     <td valign="top">
