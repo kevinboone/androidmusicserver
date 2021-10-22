@@ -1,6 +1,6 @@
 /*
  *  Kevin's Music Server for Android
- *  Copyright (c)2015
+ *  Copyright (c)2015-2021
  *  Distributed under the terms of the GNU Public Licence, version 2.0
  */
 
@@ -73,7 +73,7 @@ public class AudioDatabase
         } while (cur.moveToNext());
       cur.close();
 
-
+      Log.d ("AMS", "Enumerating genres");
       cur = context.getContentResolver().query (
          MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,
          new String[] { MediaStore.Audio.Genres._ID, 
@@ -81,9 +81,13 @@ public class AudioDatabase
       for (cur.moveToFirst(); !cur.isAfterLast(); cur.moveToNext()) 
         {
         String genreID = cur.getString(0);
-        String genreName = cur.getString(1);
-        if (genreHasTracks(context, genreID))
-          genres.add (genreName);
+        Log.d ("AMS", "genre ID is " + genreID);
+	if (genreID != null)
+	  {
+          String genreName = cur.getString(1);
+          if (genreHasTracks(context, genreID))
+            genres.add (genreName);
+	  }
         }
       cur.close();
       }

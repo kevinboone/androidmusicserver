@@ -1,14 +1,36 @@
+# androidmusicserver
+
+Version 0.0.6, October 2021
+
+Please note that this app has been largely unchanged since 2015.
+I've made only the minimum necessary changes to keep it working 
+on the Android devices I own. The most recent device I've tested
+is the Samsung Galaxy s10. 
+
+The app has many problems. The genre support that I mentioned as being
+problematic back in 2015 remains a problem -- it's shockingly slow
+(minutes, with more than a hundred or so albums). This is a crude,
+unsatisfactory app, and I only continue to
+maintain it because I can't find anything else that does
+the same thing. If anybody knows of a superior alternative -- ideally
+open-source -- please tell me, so I can let this project quietly
+fade away.
+
 ## What is this?
 
-
 Kevin's Music Server for Android provides a web browser interface to
-control playback of audio files stored on relatively modern (4.x-9.0) 
+control playback of audio files stored on most modern (4.x-11.0) 
 Android devices. 
 This allows the Android device
 to be used as a music server, in multi-room audio applications, among
-other things. 
+other things. I normally keep my Android phone docked, with a permanent
+USB connection to an audio DAC. This arrangement produces good quality
+audio playback, but I don't always have the pone within reach. It's
+awkward to fiddle with the little screen when it's docked, anyway.
+Providing a web interface -- albeit a crude one -- allows me to
+control playback from a web browser.
 
-Audio tracks can be selected using a browser from a list of albums, or
+Audio tracks can be selected using the browser from a list of albums, or
 directly from the filesystem (but see notes below). 
 You can restrict the album listing to particular
 genres or particular artists rather than displaying all 
@@ -105,11 +127,12 @@ collections of audio files, that are relatively tidily organized.
 All lists (of albums, artists, etc) are displayed on a single,
 possibly long page. In practice it seems to work reasonably well
 with collections of a few hundred albums, but the user interface
-will struggle with thousands of albums. The capacity of the
+will struggle with thousands of albums, particularly if
+you choose to display cover art. The capacity of the
 app in this regard really depends on the CPU speed and memory
 of the Android device. However, my experience is that even
-really fast, modern devices like the Samsung S8 don't devote a lot
-of resource to remote clients. 
+really fast, modern devices like the Samsung S10 don't devote a lot
+of resource to servicing remote clients. 
 
 In general Android Music Server assumes
 (as Android generally does) that audio tracks are organized into
@@ -485,6 +508,13 @@ with, or without cover art -- the default is without. However, if you
 have recently browsed albums or tracks by cover, then covers will
 be included in search results as well. 
 
+Finally, in this long list of limitations, there's the fact that
+changing the orientation of the device (portrait/landscape) will
+probably cause the app to reload. Because it's deliberately completely
+stateless, this will clear the playlist and stop playback. So long
+as the UI isn't actually visible -- and, frankly, it's nothing much
+to look at -- this isn't a problem.
+
 ## Legal and copying
 
 Android Music Server is open-source, and released under the terms
@@ -504,6 +534,18 @@ might not. If it doesn't, you're very welcome to fix it.
 <h2>Revision history</h2>
 
 <table cellpadding="5px">
+  <tr>
+    <td valign="top">
+      0.0.6
+    </td>
+    <td valign="top">
+      October  2021
+    </td>
+    <td valign="top">
+      Stopped the app crashing when a genre is "null" in the
+      media database. 
+    </td>
+  </tr>
   <tr>
     <td valign="top">
       0.0.5

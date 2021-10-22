@@ -1,6 +1,6 @@
 /*
  *  Kevin's Music Server for Android
- *  Copyright (c)2015
+ *  Copyright (c)2015-2021
  *  Distributed under the terms of the GNU Public Licence, version 2.0
  */
 
