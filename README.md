@@ -1,6 +1,6 @@
 # androidmusicserver
 
-Version 0.0.6, October 2021
+Version 0.0.7, November 2021
 
 Please note that this app has been largely unchanged since 2015.
 I've made only the minimum necessary changes to keep it working 
@@ -48,7 +48,7 @@ starting and stopping it) looks like this:
 
 Android Music Server uses no Android feature introduced since about 2015, so
 it stands a chance of working on any relatively modern device. The most 
-recent reported to work is the Samsung Note 8, but there's no particular
+recent reported to work is the Samsung S10, but there's no particular
 reason why more recent versions won't work.
 
 Android Music Server is open-source, free of charge, and has no advertisements.
@@ -58,7 +58,7 @@ It's easy to build from source if you have the Android SDK available.
 ## Features
 - Simple web interface -- works on most desktop web browsers and many mobile browsers 
 - Integrates with the Android media catalogue -- browse by album, artist, genre, composer, or track
-- Supports file/folder browsing
+- Supports file/folder browsing (if the Android version does)
 - Media catalogue text search
 - Equalizer
 - Cover art (both baked-in and album-folder images)
@@ -520,7 +520,11 @@ to look at -- this isn't a problem.
 Android Music Server is open-source, and released under the terms
 of the GNU Public Licence, version 3.0. It contains components from
 a number of different authors. Please see the individual source
-files for detailed licencing and redistribution rights. Broadly, 
+files for detailed licencing and redistribution rights. 
+The button icons are from the Tango icon set, released under the
+germs of the GNU Public Licence, version 2.0.
+
+Broadly, 
 however, Android Music Server is free of charge and may be freely
 copied and distributed, so long as the original authors continue 
 to be acknowledged. 
@@ -534,6 +538,17 @@ might not. If it doesn't, you're very welcome to fix it.
 <h2>Revision history</h2>
 
 <table cellpadding="5px">
+  <tr>
+    <td valign="top">
+      0.0.7
+    </td>
+    <td valign="top">
+      November 2021
+    </td>
+    <td valign="top">
+      Improved app screen layout a little
+    </td>
+  </tr>
   <tr>
     <td valign="top">
       0.0.6
@@ -602,11 +617,6 @@ might not. If it doesn't, you're very welcome to fix it.
     </td>
   </tr>
 </table>
-
-
-
-
-
 
 ## Download
 
