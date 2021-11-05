@@ -1,0 +1,13 @@
+Kevin's Music Server for Android provides a web browser interface to control playback of audio files stored on most modern (4.x-11.0) Android devices. This allows the Android device to be used as a music server, in multi-room audio applications, among other things. I normally keep my Android phone docked, with a permanent USB connection to an audio DAC. This arrangement produces good quality audio playback, but I don't always have the pone within reach. It's awkward to fiddle with the little screen when it's docked, anyway. Providing a web interface – albeit a crude one – allows me to control playback from a web browser.
+
+Audio tracks can be selected using the browser from a list of albums, or directly from the filesystem (but see notes below). You can restrict the album listing to particular genres or particular artists rather than displaying all albums on the same page. Album cover art images can be displayed.
+
+<br><b>Features:</b>
+
+* Simple web interface – works on most desktop web browsers and many mobile browsers
+* Integrates with the Android media catalogue – browse by album, artist, genre, composer, or track
+* Supports file/folder browsing
+* Media catalogue text search
+* Equalizer
+* Cover art (both baked-in and album-folder images)
+* Playback control by headset or remote control
