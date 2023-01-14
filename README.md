@@ -646,5 +646,5 @@ might not. If it doesn't, you're very welcome to fix it.
 
 ## Download
 
-[Download APK](app/build/outputs/apk/debug/app-debug.apk) (on GitHub, click "View raw" to get the actual APK file)
+[Download APK](apk/app-debug.apk) (on GitHub, click "View raw" to get the actual APK file)
 
