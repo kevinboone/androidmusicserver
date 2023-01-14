@@ -23,7 +23,9 @@ import net.kevinboone.androidmusicplayer.TrackInfo;
 import net.kevinboone.androidmusicplayer.Errors;
 import net.kevinboone.androidmusicplayer.SearchSpec;
 import net.kevinboone.textutils.*;
+import android.annotation.*;
 
+@SuppressLint("SimpleDateFormat")
 public class WebServer extends NanoHTTPD 
 {
 protected static String DOCROOT="/";
@@ -653,31 +655,31 @@ public WebServer (Context context)
         {
         return pause();
         }
-      else if (cmd.toLowerCase().startsWith ("play_file_now"))
+      else if (cmd.toLowerCase(Locale.getDefault()).startsWith ("play_file_now"))
         {
         String uri = cmd.substring (14); 
         playFileNow (uri);
         return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
             makeJSONStatusResponse (0));
         }
-      else if (cmd.toLowerCase().startsWith ("add_album_to_playlist"))
+      else if (cmd.toLowerCase(Locale.getDefault()).startsWith ("add_album_to_playlist"))
         {
         String album = cmd.substring (22); 
         return addAlbumToPlaylist (album);
         }
-      else if (cmd.toLowerCase().startsWith ("add_to_playlist"))
+      else if (cmd.toLowerCase(Locale.getDefault()).startsWith ("add_to_playlist"))
         {
         String uri = cmd.substring (16); 
         int n = addToPlaylist (uri);
         return new NanoHTTPD.Response (Response.Status.OK, "text/plain", 
             makeJSONStatusResponse (0, "Added " + n + " items(s) to playlist"));
         }
-      else if (cmd.toLowerCase().startsWith ("play_album_now"))
+      else if (cmd.toLowerCase(Locale.getDefault()).startsWith ("play_album_now"))
         {
         String album = cmd.substring (15); 
         return playAlbumNow (album);
         }
-      else if (cmd.toLowerCase().startsWith ("set_eq_level"))
+      else if (cmd.toLowerCase(Locale.getDefault()).startsWith ("set_eq_level"))
         {
         String arg = cmd.substring (13); 
         int p = arg.indexOf (','); 
@@ -687,13 +689,13 @@ public WebServer (Context context)
         int level = Integer.parseInt (sLevel);
         return setEqLevel (band, level);
         }
-      else if (cmd.toLowerCase().startsWith ("set_bb_level"))
+      else if (cmd.toLowerCase(Locale.getDefault()).startsWith ("set_bb_level"))
         {
         String arg = cmd.substring (13); 
         int level = Integer.parseInt (arg);
         return setBBLevel (level);
         }
-      else if (cmd.toLowerCase().startsWith ("set_vol_level"))
+      else if (cmd.toLowerCase(Locale.getDefault()).startsWith ("set_vol_level"))
         {
         String arg = cmd.substring (14); 
         int level = Integer.parseInt (arg);

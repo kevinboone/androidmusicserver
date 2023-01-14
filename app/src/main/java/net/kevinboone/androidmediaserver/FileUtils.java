@@ -5,12 +5,13 @@
  */
 
 package net.kevinboone.androidmediaserver;
+import java.util.Locale;
 
 public class FileUtils 
   {
   public static String getMimeType (String filename)
     {
-    String lc = filename.toLowerCase();
+    String lc = filename.toLowerCase(Locale.getDefault());
     if (lc.endsWith (".jpg"))
       return "image/jpeg";
     if (lc.endsWith (".png"))

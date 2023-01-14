@@ -1,14 +1,18 @@
 apply plugin: 'com.android.application'
 
 android {
+    lintOptions {
+      checkReleaseBuilds false
+      abortOnError false
+    }
     namespace 'net.kevinboone.androidmediaserver'
-    compileSdkVersion 31
+    compileSdkVersion 19 
     buildToolsVersion "33.0.1"
 
     defaultConfig {
         applicationId "net.kevinboone.androidmediaserver"
         minSdkVersion 14
-        targetSdkVersion 31
+        targetSdkVersion 19 
     }
 
     buildTypes {

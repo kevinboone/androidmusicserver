@@ -40,20 +40,31 @@ public class Client
       // This should never happen, unless the JVM is broken
       throw new ClientException (e.toString());
       }
+    catch (JSONException e)
+      {
+      throw new ClientException (e.toString());
+      }
     }
 
 
   protected void checkJSONResponse (JSONObject response) 
       throws ClientException
     {
-    int status = response.getInt ("status");
-    if (status != 0)
+    try
       {
-      String msg = response.getString ("message");
-      if (msg == null)
-        throw new ClientException ("Server returned error code " + status);
-      else
-        throw new ClientException (msg);
+      int status = response.getInt ("status");
+      if (status != 0)
+	{
+	String msg = response.getString ("message");
+	if (msg == null)
+	  throw new ClientException ("Server returned error code " + status);
+	else
+	  throw new ClientException (msg);
+	}
+      }
+    catch (JSONException e)
+      {
+      throw new ClientException ("Error parsing JSON: " + e.toString());
       }
     }
 

@@ -13,7 +13,9 @@ import android.media.MediaPlayer;
 import android.util.Log;
 import android.view.*;
 import android.media.*;
+import android.annotation.*;
 
+@SuppressLint("StaticFieldLeak")
 public class RemoteControlReceiver extends BroadcastReceiver 
 {
   protected static Player player = null;

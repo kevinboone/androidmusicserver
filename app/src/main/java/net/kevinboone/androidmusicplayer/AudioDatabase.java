@@ -82,12 +82,12 @@ public class AudioDatabase
         {
         String genreID = cur.getString(0);
         Log.d ("AMS", "genre ID is " + genreID);
-	if (genreID != null)
-	  {
+        if (genreID != null)
+          {
           String genreName = cur.getString(1);
           if (genreHasTracks(context, genreID))
             genres.add (genreName);
-	  }
+          }
         }
       cur.close();
       }
@@ -393,8 +393,8 @@ public Set<String> findTracks (Context context, SearchSpec search,
           {
           if (title != null && title.length() > 0)
             {
-            if (title.toLowerCase().indexOf 
-                (search.getText().toLowerCase()) >= 0)
+            if (title.toLowerCase(Locale.getDefault()).indexOf 
+                (search.getText().toLowerCase(Locale.getDefault())) >= 0)
               {
               if (count >= start)
                 results.add (extUri.toString());
@@ -420,10 +420,10 @@ public Set<String> findTracks (Context context, SearchSpec search,
     {
     Set<String> results = new TreeSet<String>();
 
-    String text = ss.getText().toLowerCase();
+    String text = ss.getText().toLowerCase(Locale.getDefault());
     for (String album : albums)
       {
-      if (album.toLowerCase().indexOf (text) >= 0) 
+      if (album.toLowerCase(Locale.getDefault()).indexOf (text) >= 0) 
         {
         results.add (album);
         }
@@ -438,10 +438,10 @@ public Set<String> findTracks (Context context, SearchSpec search,
     {
     Set<String> results = new TreeSet<String>();
 
-    String text = ss.getText().toLowerCase();
+    String text = ss.getText().toLowerCase(Locale.getDefault());
     for (String artist : artists)
       {
-      if (artist.toLowerCase().indexOf (text) >= 0) 
+      if (artist.toLowerCase(Locale.getDefault()).indexOf (text) >= 0) 
         {
         results.add (artist);
         }
@@ -456,10 +456,10 @@ public Set<String> findTracks (Context context, SearchSpec search,
     {
     Set<String> results = new TreeSet<String>();
 
-    String text = ss.getText().toLowerCase();
+    String text = ss.getText().toLowerCase(Locale.getDefault());
     for (String composer : composers)
       {
-      if (composer.toLowerCase().indexOf (text) >= 0) 
+      if (composer.toLowerCase(Locale.getDefault()).indexOf (text) >= 0) 
         {
         results.add (composer);
         }

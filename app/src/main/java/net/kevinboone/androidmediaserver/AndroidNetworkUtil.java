@@ -16,7 +16,8 @@ public class AndroidNetworkUtil
     how relaible this is, to be honest. */
 public static String getWifiIP (Context c)
   {
-  WifiManager wifiMgr = (WifiManager) c.getSystemService (Context.WIFI_SERVICE);
+  WifiManager wifiMgr = (WifiManager) 
+     c.getApplicationContext().getSystemService (Context.WIFI_SERVICE);
   WifiInfo wifiInfo = wifiMgr.getConnectionInfo();
   if (wifiInfo != null)
     {
