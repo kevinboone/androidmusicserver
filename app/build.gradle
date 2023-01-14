@@ -1,0 +1,20 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace 'net.kevinboone.androidmediaserver'
+    compileSdkVersion 31
+    buildToolsVersion "33.0.1"
+
+    defaultConfig {
+        applicationId "net.kevinboone.androidmediaserver"
+        minSdkVersion 14
+        targetSdkVersion 31
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+}

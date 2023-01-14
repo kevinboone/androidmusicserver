@@ -1,6 +1,6 @@
 # androidmusicserver
 
-Version 0.0.7, November 2021
+Version 0.0.8, January 2023 
 
 Please note that this app has been largely unchanged since 2015.
 I've made only the minimum necessary changes to keep it working 
@@ -77,6 +77,21 @@ You may have to tell
 your device to allow apps from unknown suppliers. If you're worried that this app might
 transmit all your secret passwords to villains, you're welcome to inspect
 and build the application yourself.
+
+## Building
+
+This version of Android Music Sever is designed be built using gradle, 
+the gradle Android plugin, and the Android SDK for API level 31. With these
+things all in place, you should be able to build using:
+
+    $ ./gradlew build
+
+You may need to create a `local.properties` file indicating the location
+of the Android SDK files:
+
+    sdk.dir=/home/foo/Android/Sdk
+
+A successful build will produce APK files in `app/build/outputs/apk`.
 
 ## Permissions 
 
@@ -540,6 +555,17 @@ might not. If it doesn't, you're very welcome to fix it.
 <table cellpadding="5px">
   <tr>
     <td valign="top">
+      0.0.8
+    </td>
+    <td valign="top">
+     January 2023
+    </td>
+    <td valign="top">
+      Refactored for gradle build and API 31 
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
       0.0.7
     </td>
     <td valign="top">
@@ -620,5 +646,5 @@ might not. If it doesn't, you're very welcome to fix it.
 
 ## Download
 
-[Download APK](apk/androidmusicserver-debug.apk) (on GitHub, click "View raw" to get the actual APK file)
+[Download APK](app/build/outputs/apk/debug/app-debug.apk) (on GitHub, click "View raw" to get the actual APK file)
 
