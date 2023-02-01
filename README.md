@@ -2,6 +2,11 @@
 
 Version 0.0.8, January 2023 
 
+A web interface to the Android audio player -- control your media
+playback using a browser.
+
+## Warning -- old, old code
+
 Please note that this app has been largely unchanged since 2015.
 I've made only the minimum necessary changes to keep it working 
 on the Android devices I own. The most recent device I've tested
@@ -16,9 +21,19 @@ the same thing. If anybody knows of a superior alternative -- ideally
 open-source -- please tell me, so I can let this project quietly
 fade away.
 
+Please bear in mind that the latest Android version that this app can
+currently target is 4.4 (API level 19). While it does seem to work 
+on later devices, this API level is too early for the app to be accepted
+by any app store that I know of, even if I wanted to publish it that
+way. Although the app builds with the SDK for API level 31, it fails
+strangely on many devices.
+
+As I said, this is very old code, that really ought to be allowed to
+rest in peace. 
+
 ## What is this?
 
-Kevin's Music Server for Android provides a web browser interface to
+Android Music Server provides a web browser interface to
 control playback of audio files stored on most modern (4.x-11.0) 
 Android devices. 
 This allows the Android device
@@ -81,7 +96,7 @@ and build the application yourself.
 ## Building
 
 This version of Android Music Sever is designed be built using gradle, 
-the gradle Android plugin, and the Android SDK for API level 31. With these
+the gradle Android plugin, and the Android SDK for API level 19. With these
 things all in place, you should be able to build using:
 
     $ ./gradlew build
