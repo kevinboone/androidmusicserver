@@ -1,6 +1,6 @@
 # androidmusicserver
 
-Version 0.0.8, January 2023 
+Version 0.0.9, January 2023 
 
 A web interface to the Android audio player -- control your media
 playback using a browser.
